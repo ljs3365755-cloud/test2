@@ -1,7 +1,15 @@
+보내주신 이미지를 보니 옷이 캐릭터에 비해 너무 작고, 드롭한 뒤에 다시 원래 위치로 돌아오지 않아 불편하셨군요!
+
+옷을 입혔을 때 캐릭터 몸에 딱 맞도록 사이즈를 자동으로 키우고, 옷장(왼쪽/오른쪽 영역)으로 다시 드래그하면 원래 크기로 돌아오며 자리를 잡도록 코드를 수정했습니다.
+
+👗 개선된 옷 입히기 게임 코드
+이 코드에서는 옷을 캐릭터 위에 놓으면 width: 80% 정도로 커지게 하고, 다시 옷장으로 치우면 원래의 작은 사이즈로 돌아가게 만들었습니다.
+
+HTML
 <!DOCTYPE html>
 <html>
 <head>
-    <title>스틱맨 옷 입히기 게임</title>
+    <title>스틱맨 옷 입히기 완성판</title>
     <style>
         body {
             display: flex;
@@ -9,65 +17,65 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #e0f7fa;
-            font-family: sans-serif;
+            background-color: #f0f2f5;
+            user-select: none;
         }
 
         .game-container {
             display: flex;
             align-items: center;
-            gap: 50px;
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            gap: 30px;
         }
 
-        /* 옷 보관소 (왼쪽, 오른쪽) */
+        /* 옷 보관소: 여기에 놓으면 옷이 다시 돌아옵니다 */
         .closet {
-            width: 150px;
-            height: 300px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 2px dashed #ccc;
-            border-radius: 10px;
-        }
-
-        /* 가운데 캐릭터 영역 */
-        #character-area {
-            position: relative;
-            width: 300px;
+            width: 180px;
             height: 400px;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            border: 2px solid #333;
-            border-radius: 15px;
-            overflow: hidden;
+            border: 3px dashed #bdc3c7;
+            border-radius: 20px;
+            background-color: rgba(255, 255, 255, 0.5);
+            transition: background 0.3s;
         }
 
-        .base-body {
-            width: 100%;
-            height: auto;
+        /* 캐릭터 영역 */
+        #character-area {
+            position: relative;
+            width: 350px;
+            height: 500px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .base-face {
+            width: 90%; /* 캐릭터 얼굴/몸 크기 */
             z-index: 1;
         }
 
-        /* 드래그되는 옷 스타일 */
+        /* 옷 기본 스타일 (옷장에 있을 때) */
         .cloth {
             cursor: grab;
-            width: 120px;
+            width: 100px; /* 옷장에 있을 땐 작게 */
+            margin: 10px 0;
+            transition: width 0.2s, transform 0.2s;
             z-index: 10;
         }
 
-        /* 입혀진 옷의 위치 (중앙에 겹치게) */
+        /* 캐릭터에게 입혀졌을 때의 스타일 */
         .dressed {
             position: absolute;
-            top: 50%;
+            top: 55%; /* 옷 위치가 높으면 이 값을 조절하세요 */
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 250px; /* 캐릭터 크기에 맞춰 조절 */
-            pointer-events: none; /* 옷을 입힌 후에도 클릭 방해 안 되게 */
+            width: 280px !important; /* 캐릭터 몸에 맞춰 크게 확장 */
+            pointer-events: auto; /* 입힌 후에도 다시 잡을 수 있게 */
         }
     </style>
 </head>
@@ -75,25 +83,27 @@
 
 <div class="game-container">
     <div class="closet" id="left-closet" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <img src="jj.png" id="cloth1" class="cloth" draggable="true" ondragstart="drag(event)">
+        <img src="jj.png" id="cloth-jj" class="cloth" draggable="true" ondragstart="drag(event)">
     </div>
 
     <div id="character-area" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <img src="face.jpg" class="base-body" alt="캐릭터">
+        <img src="face.jpg" class="base-face" alt="캐릭터">
         </div>
 
     <div class="closet" id="right-closet" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <img src="dress.png" id="cloth2" class="cloth" draggable="true" ondragstart="drag(event)">
+        <img src="dress.png" id="cloth-dress" class="cloth" draggable="true" ondragstart="drag(event)">
     </div>
 </div>
 
 <script>
+    const sound = new Audio('ddung.mp3');
+
     function allowDrop(ev) {
-        ev.preventDefault(); // 드롭을 허용하도록 기본 동작 막기
+        ev.preventDefault();
     }
 
     function drag(ev) {
-        ev.dataTransfer.setData("text", ev.target.id); // 드래그하는 요소의 ID 저장
+        ev.dataTransfer.setData("text", ev.target.id);
     }
 
     function drop(ev) {
@@ -101,12 +111,16 @@
         const data = ev.dataTransfer.getData("text");
         const draggedElement = document.getElementById(data);
         
-        // 만약 캐릭터 영역에 드롭했다면?
+        // 1. 캐릭터 영역에 놓았을 때 (입히기)
         if (ev.currentTarget.id === "character-area") {
             draggedElement.classList.add("dressed");
             ev.currentTarget.appendChild(draggedElement);
+            
+            // "뚱" 소리 재생
+            sound.currentTime = 0;
+            sound.play();
         } 
-        // 다시 옷장으로 보낸다면?
+        // 2. 옷장(양옆)에 다시 놓았을 때 (벗기기)
         else if (ev.currentTarget.classList.contains("closet")) {
             draggedElement.classList.remove("dressed");
             ev.currentTarget.appendChild(draggedElement);
