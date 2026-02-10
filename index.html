@@ -1,97 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta property="og:image" content="finger2.jpg"> 
-    <meta property="og:title" content="Hey~">
-    <meta property="og:description" content="Hi~">
-    <title>Today...</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>소리 나는 이미지 바꾸기</title>
     <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #ffffff;
-            font-family: sans-serif;
-        }
-
-        /* [첫 번째 화면 영역] */
-        #first-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-
-        .push-btn {
-            background-color: #ffc0cb;
-            border: none;
-            border-radius: 50%;
-            width: 120px;
-            height: 120px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 18px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            z-index: 2;
-        }
-
-        /* 손가락 이미지 스타일 */
-        .finger-img {
-            width: 100px;
-            margin-top: 30px  !important;
-	    position: relative !important;
-            z-index: 9999 !important;
-        }
-
-        /* [두 번째 화면 영역] */
-        #second-screen {
-            display: none; 
-            text-align: center;
-        }
-
-        .pop-up {
-            width: 320px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            animation: grow 0.6s ease-out forwards;
-        }
-
-        @keyframes grow {
-            from { transform: scale(0.5); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        .message {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-top: 20px;
-            color: #333;
-        }
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f0f0; }
+        img { cursor: pointer; width: 300px; transition: transform 0.1s; }
+        img:active { transform: scale(0.95); } /* 클릭할 때 살짝 눌리는 효과 */
     </style>
 </head>
 <body>
 
-    <div id="first-screen">
-        <button class="push-btn" onclick="showSurprise()">PUSH</button>
-        <img src="finger2.jpg" alt="손가락" class="finger-img">
-    </div>
-
-    <div id="second-screen">
-        <img src="subeen.jpg" alt="응원 이미지" class="pop-up">
-        <p class="message">웅니 오늘도 힘내!!</p>
-    </div>
+    <img id="stickman" src="smile.jpg" alt="스틱맨" onclick="changeFace()">
 
     <script>
-        function showSurprise() {
-            // 버튼 화면 통째로 삭제
-            document.getElementById('first-screen').style.display = 'none';
-            // 결과 화면 나타남
-            document.getElementById('second-screen').style.display = 'block';
+        // 소리 파일 불러오기
+        const effectSound = new Audio('ddung.mp3'); 
+
+        function changeFace() {
+            const img = document.getElementById('stickman');
+            
+            // 1. 소리 재생
+            effectSound.currentTime = 0; // 연속 클릭 시 소리가 끊기지 않고 처음부터 나오게 함
+            effectSound.play();
+
+            // 2. 이미지 교체
+            if (img.src.match("smile.jpg")) {
+                img.src = "angry.jpg";
+            } else {
+                img.src = "smile.jpg";
+            }
         }
     </script>
 
