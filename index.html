@@ -1,35 +1,65 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>소리 나는 이미지 바꾸기</title>
+    <title>꾹 누르면 화내는 스틱맨</title>
     <style>
-        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f0f0; }
-        img { cursor: pointer; width: 300px; transition: transform 0.1s; }
-        img:active { transform: scale(0.95); } /* 클릭할 때 살짝 눌리는 효과 */
+        body { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            background-color: #f9f9f9;
+            user-select: none; /* 텍스트나 이미지 선택 방지 */
+        }
+        img { 
+            cursor: pointer; 
+            width: 300px; 
+            -webkit-user-drag: none; /* 이미지 드래그 방지 */
+            transition: transform 0.05s; /* 눌리는 느낌 추가 */
+        }
+        img:active {
+            transform: scale(0.95); /* 눌렀을 때 살짝 작아짐 */
+        }
     </style>
 </head>
 <body>
 
-    <img id="stickman" src="smile.jpg" alt="스틱맨" onclick="changeFace()">
+    <img id="stickman" src="smile.jpg" alt="스틱맨">
 
     <script>
-        // 소리 파일 불러오기
-        const effectSound = new Audio('ddung.mp3'); 
+        const img = document.getElementById('stickman');
+        
+        // 1. 사운드 파일 경로를 ddung.mp3로 설정
+        const sound = new Audio('ddung.mp3'); 
 
-        function changeFace() {
-            const img = document.getElementById('stickman');
+        // 2. 누르는 순간 (화남 + 소리 재생)
+        function pressFace() {
+            img.src = "angry.jpg";
             
-            // 1. 소리 재생
-            effectSound.currentTime = 0; // 연속 클릭 시 소리가 끊기지 않고 처음부터 나오게 함
-            effectSound.play();
-
-            // 2. 이미지 교체
-            if (img.src.match("smile.jpg")) {
-                img.src = "angry.jpg";
-            } else {
-                img.src = "smile.jpg";
-            }
+            // 소리 재생 로직: 누를 때마다 처음부터 재생되도록 설정
+            sound.pause();      // 혹시 재생 중이면 멈춤
+            sound.currentTime = 0; // 재생 위치를 처음으로
+            sound.play().catch(e => console.log("소리 재생을 위해 화면을 먼저 클릭하세요!"));
         }
+
+        // 3. 손을 떼는 순간 (다시 웃음)
+        function releaseFace() {
+            img.src = "smile.jpg";
+        }
+
+        // 마우스 이벤트 (PC용)
+        img.addEventListener('mousedown', pressFace);
+        img.addEventListener('mouseup', releaseFace);
+        img.addEventListener('mouseleave', releaseFace);
+
+        // 터치 이벤트 (모바일/태블릿용)
+        img.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // 화면 스크롤이나 확대 방지
+            pressFace();
+        }, { passive: false });
+        
+        img.addEventListener('touchend', releaseFace);
     </script>
 
 </body>
