@@ -18,23 +18,25 @@ body, html {
     background: url('back.jpg') no-repeat center center / cover;
     position: relative;
     display: flex;
-    justify-content: space-between; /* 양옆으로 아이콘 배치 */
+    justify-content: space-between;
     align-items: center;
-    padding: 0 40px; /* 양끝 여백 */
+    /* 핵심: 패널 여백을 150px로 늘려 아이콘을 중앙 쪽으로 당김 */
+    padding: 0 150px; 
 }
 
-/* 사이드 패널: 아이콘들이 세로로 예쁘게 나열됨 */
+/* 사이드 패널 */
 .side-panel {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 25px;
     z-index: 100;
 }
 
+/* 아이콘 스타일 */
 .item {
-    width: 100px; /* 아이콘 크기 */
+    width: 110px; /* 아이콘 크기 살짝 키움 */
     cursor: grab;
-    filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.2)); /* 아이콘 그림자 */
+    filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.3));
     transition: transform 0.2s;
 }
 
@@ -42,7 +44,7 @@ body, html {
     transform: scale(1.1);
 }
 
-/* 중앙 짱구(강아지) 본체 */
+/* 중앙 메인 캐릭터 */
 .center-panel {
     position: absolute;
     left: 50%;
@@ -51,14 +53,15 @@ body, html {
 }
 
 #main-zzanggu {
-    width: 350px;
+    width: 380px;
     user-select: none;
-    pointer-events: none; /* 본체는 드래그 방해 안되게 */
+    pointer-events: none;
 }
 
-/* 드롭된 아이템들 */
+/* 드롭된 스티커 아이템 */
 .dropped-item {
     position: absolute;
     cursor: move;
     z-index: 50;
+    /* 더블 클릭 삭제 안내 텍스트가 필요하면 여기에 추가 */
 }
