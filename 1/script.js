@@ -39,3 +39,31 @@ document.querySelectorAll('.layered-item').forEach(layer => {
         layer.src = ""; // 이미지 경로 초기화
     });
 });
+items.forEach(item => {
+    item.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('itemName', item.alt.toLowerCase());
+        e.dataTransfer.setData('itemSrc', item.src);
+        // [추가] 선택한 바지의 고유 클래스명을 전달합니다
+        e.dataTransfer.setData('itemClass', item.className); 
+    });
+});
+
+dropTarget.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const name = e.dataTransfer.getData('itemName');
+    const src = e.dataTransfer.getData('itemSrc');
+    const className = e.dataTransfer.getData('itemClass'); // [추가]
+
+    let targetId = '';
+    if (name.includes('hood')) targetId = 'wear-hood';
+    else if (name.includes('shirt')) targetId = 'wear-shirt';
+    else if (name.includes('pants')) targetId = 'wear-pants';
+
+    if (targetId) {
+        const targetLayer = document.getElementById(targetId);
+        targetLayer.src = src;
+        // [추가] 기존 클래스를 지우고 새로 선택한 바지의 클래스를 입힙니다
+        targetLayer.className = 'layered-item ' + className.replace('item', '').trim();
+        targetLayer.style.display = 'block';
+    }
+});
