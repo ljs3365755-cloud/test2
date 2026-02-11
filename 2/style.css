@@ -1,55 +1,69 @@
-/* --- 기본 배경 세팅 --- */
+/* 기본 초기화 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* 1. 백그라운드 이미지 설정 */
 .game-container {
     width: 100vw;
     height: 100vh;
-    background: url('background.jpg') no-repeat center center / cover;
+    background-image: url('background.jpg'); /* 본인의 배경 이미지 파일명으로 수정 */
+    background-size: cover;
+    background-position: center;
+    position: relative; /* 자유 배치를 위한 기준점 */
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-/* --- 캐릭터 배치 구역 --- */
-.zzanggu-box {
-    position: relative;
-    width: 400px; /* 캐릭터 크기에 맞춰 조절 */
-    height: 400px;
+/* 사이드 패널 */
+.side-panel {
+    width: 180px;
+    height: 90vh;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(5px); /* 배경 살짝 흐리게 해서 고급스럽게 */
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    z-index: 10;
+}
+
+/* 아이템 스타일 */
+.item {
+    width: 100px;
+    cursor: grab;
+    transition: transform 0.2s;
+}
+
+/* 중앙 메인 캐릭터 */
+.center-panel {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
 }
 
 #main-zzanggu {
-    width: 100%;
-    position: absolute;
-    bottom: 0;
-    z-index: 10; /* 본체는 중간 */
+    width: 350px;
+    user-select: none;
+    -webkit-user-drag: none;
 }
 
-/* --- 입히는 옷들 공통 설정 --- */
-.layered-item {
-    position: absolute;
-    z-index: 20; /* 본체보다 위로 */
-    display: none; /* 아이템을 놓기 전엔 숨김 */
-}
-
-/* --- ★ 여기서부터 부위별 미세 조정 (수정 가능 구간) ★ --- */
-
-/* 모자나 머리핀 위치 */
-.head-part {
-    width: 150px;   /* 아이템 크기 */
-    top: 10px;      /* 머리 위에서부터의 거리 */
-    left: 50%;      /* 중앙 정렬 기준 */
-    transform: translateX(-50%); /* 정확히 가운데 배치 */
-}
-
-/* 상의나 옷 위치 */
-.body-part {
-    width: 250px;   /* 옷 크기 */
-    bottom: 50px;   /* 아래에서부터의 거리 */
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-/* 악세사리나 기타 소품 */
-.acc-part {
-    width: 80px;
-    top: 150px;
-    right: 20px; /* 오른쪽에서 미세 조정 */
+/* 3. 자유롭게 배치될 아이템 전용 클래스 */
+.dropped-item {
+    position: absolute; /* 자유 좌표 배치 */
+    cursor: move;
+    z-index: 20;
 }
