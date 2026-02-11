@@ -34,23 +34,35 @@ body {
 /* 중앙 캐릭터 구역 (핵심) */
 .human-box {
     position: relative; /* 자식 요소들의 기준점 */
-    width: 200px; 
-    min-height: 400px;
+    width: 300px;       /* 캐릭터 크기에 맞춰 조절 */
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #main-human {
     width: 100%;
     display: block;
+    z-index: 1;
 }
 
-/* 캐릭터 위에 겹쳐질 옷 레이어 */
+/* 캐릭터 위에 겹쳐질 옷 레이어 설정 */
 .layered-item {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    pointer-events: none; /* 입혀진 옷이 마우스 드래그를 방해하지 않게 함 */
-    z-index: 10;
+    height: 100%;
+    object-fit: contain; /* 비율 유지 */
+    z-index: 10;         /* 캐릭터보다 위에 표시 */
+    pointer-events: none; /* 옷이 드래그를 방해하지 않도록 설정 */
+}
+
+/* 옷 선택창 아이템들 */
+.item {
+    width: 80px;
+    cursor: grab;
 }
 
 .bottom-panel {
