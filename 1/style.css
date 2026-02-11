@@ -71,30 +71,34 @@ z-index: 20; /* 셔츠나 바지보다 위 */
 z-index: 20; /* 셔츠나 바지보다 위 */
 }
 
-/* 공통 바지 레이어 위치 */
-#wear-pants {
+/* 1번 바지: 슬림한 핏 */
+.pants-type1 {
+    width: 130px !important;
+    height: 180px !important;
     top: 55%;
     left: 48%;
     transform: translateX(-50%);
     z-index: 10;
 }
 
-/* 1번 바지: 슬림한 핏 */
-.pants-type1 {
-    width: 130px !important;
-    height: 180px !important;
-}
-
 /* 2번 바지: 와이드 팬츠 (통이 넓음) */
 .pants-type2 {
     width: 170px !important;
     height: 190px !important;
+    top: 55%;
+    left: 48%;
+    transform: translateX(-50%);
+    z-index: 10;
 }
 
 /* 3번 바지: 반바지나 짧은 바지 */
 .pants-type3 {
     width: 140px !important;
     height: 120px !important;
+    top: 55%;
+    left: 48%;
+    transform: translateX(-50%);
+    z-index: 10;
 }
 
 /* 하단 바지 패널 */
