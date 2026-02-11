@@ -36,10 +36,10 @@ body, html { width: 100%; height: 100%; overflow: hidden; }
 .item { cursor: grab; transition: transform 0.2s; }
 
 /* --- 아이템별 개별 사이즈 조절 (여기서 숫자를 바꾸면 됨) --- */
-.size-hat { width: 130px; }
-.size-hat2 { width: 130px; }
-.size-cafe { width: 160px; }
-.size-pin { width: 60px; }
+.size-hat { width: 250px; }
+.size-hat2 { width: 250px; }
+.size-cafe { width: 240px; }
+.size-pin { width: 100px; }
 .size-ribbon { width: 100px; }
 .size-fur { width: 90px; }
 
