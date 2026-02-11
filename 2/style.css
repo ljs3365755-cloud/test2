@@ -21,29 +21,42 @@ body, html {
 }
 #main-zzanggu { width: 300px; user-select: none; -webkit-user-drag: none; }
 
-.item-bar {
+/* 하단 네비게이션 컨테이너 */
+.bottom-nav {
     position: absolute; bottom: 30px; left: 50%;
     transform: translateX(-50%);
-    width: 90%; max-width: 600px; height: 100px;
-    background: rgba(255, 255, 255, 0.7);
-    border-radius: 50px;
-    display: flex; align-items: center; gap: 15px; padding: 0 25px;
-    overflow-x: auto; overflow-y: hidden;
-    z-index: 1000; touch-action: pan-x;
+    width: 95%; max-width: 700px;
+    display: flex; align-items: center; gap: 10px;
+    z-index: 1000;
 }
-.item-bar::-webkit-scrollbar { display: none; }
+
+.item-bar {
+    flex: 1; height: 100px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 50px;
+    display: flex; align-items: center; gap: 20px; padding: 0 25px;
+    overflow-x: hidden; /* 화살표로만 조절하기 위해 스크롤 숨김 */
+    scroll-behavior: smooth;
+}
+
+.nav-btn {
+    width: 40px; height: 40px; border-radius: 50%; border: none;
+    background: #ff6b6b; color: white; font-weight: bold;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
 
 .menu-item { 
     height: 60px; width: auto; cursor: pointer; flex-shrink: 0; 
     user-select: none; -webkit-user-drag: none; 
 }
 
+/* 배치된 스티커 */
 .dropped-item {
     position: absolute; cursor: move; z-index: 2000;
     touch-action: none; user-select: none; -webkit-user-drag: none;
 }
 
-/* 사이즈 조절 */
 .size-hat, .size-hat2 { width: 150px; }
 .size-cafe { width: 160px; }
 .size-pin { width: 60px; }
