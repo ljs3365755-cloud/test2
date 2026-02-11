@@ -1,3 +1,44 @@
+드디어 PC와 모바일 모두 해결됐군요! 정말 다행입니다. 저도 한시름 놓았네요.
+
+아이템들을 화면 양옆이 아니라 하단에 한 줄로 깔끔하게 정렬하고 싶으시군요. 모바일에서는 아래쪽에 가로로 나열되는 게 손가락으로 탭하기 훨씬 편하죠. 보내주신 파일명들을 기준으로 HTML 구조를 잡고, CSS로 하단 바(Bar) 스타일을 만들었습니다.
+
+1. index.html (하단 정렬 구조로 변경)
+사이드 패널 대신 하단에 하나의 item-bar를 만들었습니다.
+
+HTML
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>강아지 꾸미기 하단형</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="center-panel">
+            <img src="zzanggu.png" id="main-zzanggu">
+        </div>
+
+        <div class="item-bar">
+            <img src="hat.png" class="menu-item size-hat">
+            <img src="hat2.png" class="menu-item size-hat2">
+            <img src="cafe.png" class="menu-item size-cafe">
+            <img src="pin1.png" class="menu-item size-pin">
+            <img src="pin2.png" class="menu-item size-pin">
+            <img src="pin3.png" class="menu-item size-pin">
+            <img src="reborn1.png" class="menu-item size-ribbon">
+            <img src="reborn2.png" class="menu-item size-ribbon">
+            <img src="fur.png" class="menu-item size-fur">
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+2. style.css (하단 가로 스크롤 레이아웃)
+아이템이 많아질 경우를 대비해 하단 바에 가로 스크롤을 넣었습니다.
+
+CSS
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body, html { width: 100%; height: 100%; overflow: hidden; position: fixed; }
 
@@ -5,35 +46,51 @@ body, html { width: 100%; height: 100%; overflow: hidden; position: fixed; }
     width: 100vw; height: 100vh;
     background: url('back.jpg') no-repeat center center / cover;
     position: relative;
-    touch-action: none; /* 모바일 줌/스크롤 절대 차단 */
+    touch-action: none;
 }
 
-/* 사이드 패널: 이미지처럼 중앙 쪽으로 적절히 배치 */
-.side-panel {
-    position: absolute; top: 50%; transform: translateY(-50%);
-    display: flex; flex-direction: column; z-index: 100;
+/* 하단 아이템 바 스타일 */
+.item-bar {
+    position: absolute;
+    bottom: 20px; /* 하단에서 20px 띄움 */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.5); /* 반투명 배경 */
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 0 20px;
+    overflow-x: auto; /* 아이템 많으면 가로로 밀어서 보기 */
+    z-index: 100;
+    -webkit-overflow-scrolling: touch;
 }
-.side-panel.left { left: 10%; gap: 30px; }
-.side-panel.right { right: 10%; gap: 15px; }
 
-/* 아이템 개별 사이즈 조절 */
-.menu-item { cursor: pointer; transition: 0.2s; -webkit-user-drag: none; }
-.size-hat { width: 150px; }
-.size-hat2 { width: 150px; }
-.size-cafe { width: 180px; }
-.size-pin { width: 60px; }
-.size-ribbon { width: 80px; }
-.size-fur { width: 80px; }
+/* 스크롤바 숨기기 (깔끔하게) */
+.item-bar::-webkit-scrollbar { display: none; }
+
+/* 메뉴 아이템 크기 (하단용으로 살짝 조정) */
+.menu-item { 
+    height: 80%; /* 바 높이에 맞춤 */
+    width: auto; 
+    cursor: pointer; 
+    flex-shrink: 0; 
+    -webkit-user-drag: none;
+}
 
 /* 중앙 캐릭터 */
 .center-panel {
-    position: absolute; left: 50%; top: 50%;
+    position: absolute; left: 50%; top: 45%; /* 바가 생겼으니 약간 위로 조절 */
     transform: translate(-50%, -50%);
 }
-#main-zzanggu { width: 320px; pointer-events: none; }
+#main-zzanggu { width: 300px; pointer-events: none; }
 
-/* 화면에 배치된 스티커 */
+/* 배치된 스티커 */
 .dropped-item {
     position: absolute; cursor: move; z-index: 500;
     touch-action: none; -webkit-user-drag: none;
 }
+/* 모바일용 더블탭 하이라이트 제거 */
+.menu-item, .dropped-item { -webkit-tap-highlight-color: transparent; }
