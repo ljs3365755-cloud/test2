@@ -3,37 +3,54 @@ const menuItems = document.querySelectorAll('.menu-item');
 
 let dragItem = null;
 let shiftX, shiftY;
+let lastTap = 0; // 모바일 더블탭 감지용
 
-// 1. 아이템 생성 (클릭/터치 시 1회 생성)
-menuItems.forEach(menuItem => {
-    const spawn = (e) => {
-        e.preventDefault();
-        const newItem = document.createElement('img');
-        newItem.src = menuItem.src;
-        // 메뉴 아이템의 클래스(사이즈)를 그대로 가져옴
-        newItem.className = 'dropped-item ' + menuItem.classList[1];
-        
-        // 생성 위치: 클릭/터치한 바로 그 자리
-        const event = e.type.includes('touch') ? e.touches[0] : e;
-        newItem.style.left = (event.clientX - menuItem.offsetWidth / 2) + 'px';
-        newItem.style.top = (event.clientY - menuItem.offsetHeight / 2) + 'px';
+// 1. 아이템 생성 (중복 생성 방지 로직 강화)
+function handleSpawn(e) {
+    e.preventDefault();
+    e.stopPropagation(); // 이벤트가 부모로 퍼지는 것 차단 (겹침 방지)
 
-        // 배치된 아이템에 드래그 및 삭제 이벤트 연결
-        newItem.addEventListener('mousedown', startDrag);
-        newItem.addEventListener('touchstart', startDrag, { passive: false });
-        newItem.addEventListener('dblclick', () => newItem.remove());
+    const target = e.currentTarget;
+    const newItem = document.createElement('img');
+    newItem.src = target.src;
+    newItem.className = 'dropped-item ' + target.classList[1];
 
-        container.appendChild(newItem);
-    };
+    const event = e.type.includes('touch') ? e.touches[0] : e;
+    
+    // 생성 위치 설정
+    newItem.style.left = (event.clientX - 50) + 'px'; // 대략 중앙 배치
+    newItem.style.top = (event.clientY - 50) + 'px';
 
-    menuItem.addEventListener('mousedown', spawn);
-    menuItem.addEventListener('touchstart', spawn, { passive: false });
+    // 이벤트 연결
+    newItem.addEventListener('mousedown', startDrag);
+    newItem.addEventListener('touchstart', startDrag, { passive: false });
+    
+    // PC용 더블클릭 삭제
+    newItem.addEventListener('dblclick', () => newItem.remove());
+    
+    // 모바일 전용 더블탭 삭제 로직
+    newItem.addEventListener('touchend', function(e) {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+        if (tapLength < 300 && tapLength > 0) {
+            newItem.remove(); // 0.3초 안에 두 번 탭하면 삭제
+            e.preventDefault();
+        }
+        lastTap = currentTime;
+    });
+
+    container.appendChild(newItem);
+}
+
+menuItems.forEach(item => {
+    item.addEventListener('mousedown', handleSpawn);
+    item.addEventListener('touchstart', handleSpawn, { passive: false });
 });
 
-// 2. 드래그 시작 함수
+// 2. 드래그 시작
 function startDrag(e) {
     e.preventDefault();
-    e.stopPropagation(); // 메뉴 아이템과 겹침 방지
+    e.stopPropagation();
     dragItem = e.target;
     
     const event = e.type.includes('touch') ? e.touches[0] : e;
@@ -44,7 +61,7 @@ function startDrag(e) {
     dragItem.style.zIndex = 1000;
 }
 
-// 3. 마우스/터치 이동 처리
+// 3. 이동 처리
 const moveHandler = (e) => {
     if (!dragItem) return;
     const event = e.type.includes('touch') ? e.touches[0] : e;
