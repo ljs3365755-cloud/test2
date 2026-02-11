@@ -1,21 +1,22 @@
 const items = document.querySelectorAll('.item');
 const dropTarget = document.getElementById('drop-target');
 
+// 1. 목록에 있는 옷들을 드래그할 때 정보 전달
 items.forEach(item => {
     item.addEventListener('dragstart', (e) => {
-        // 옷의 정보만 살짝 복사해서 전달합니다.
         e.dataTransfer.setData('itemName', item.alt.toLowerCase());
         e.dataTransfer.setData('itemSrc', item.src);
     });
 });
 
+// 2. 캐릭터 구역에 드롭 허용
 dropTarget.addEventListener('dragover', (e) => {
-    e.preventDefault(); // 캐릭터 영역 위로 오면 드롭 허용
+    e.preventDefault();
 });
 
+// 3. 옷을 캐릭터에게 드롭했을 때 (입히기)
 dropTarget.addEventListener('drop', (e) => {
     e.preventDefault();
-    
     const name = e.dataTransfer.getData('itemName');
     const src = e.dataTransfer.getData('itemSrc');
 
@@ -26,7 +27,15 @@ dropTarget.addEventListener('drop', (e) => {
 
     if (targetId) {
         const targetLayer = document.getElementById(targetId);
-        targetLayer.src = src; // 캐릭터 위 레이어의 주소를 바꿈
-        targetLayer.style.display = 'block'; // 옷 보이게 하기
+        targetLayer.src = src;
+        targetLayer.style.display = 'block';
     }
+});
+
+// 4. [핵심] 캐릭터가 입고 있는 옷을 클릭하면 다시 제자리로 (벗기기)
+document.querySelectorAll('.layered-item').forEach(layer => {
+    layer.addEventListener('click', () => {
+        layer.style.display = 'none'; // 레이어를 숨겨서 원래 자리로 돌아간 것처럼 보임
+        layer.src = ""; // 이미지 경로 초기화
+    });
 });
