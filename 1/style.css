@@ -1,4 +1,4 @@
-/* 1. 기본 레이아웃 및 배경 */
+/* 1. 기본 레이아웃 */
 body {
     display: flex;
     justify-content: center;
@@ -14,58 +14,61 @@ body {
     gap: 50px;
 }
 
-/* 2. 양 옆 옷 선택 패널 (후드, 셔츠) */
+/* 2. 옷 선택 패널 */
 .side-panel {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-/* 3. 드래그 가능한 옷 아이템 스타일 */
 .item {
     width: 80px;
-    cursor: grab; /* 마우스 모양을 잡기 손모양으로 */
+    cursor: grab;
     transition: transform 0.2s;
 }
 
-.item:active {
-    cursor: grabbing; /* 클릭해서 잡고 있을 때 모양 */
-}
-
-/* 4. 중앙 캐릭터 구역 (옷이 겹쳐지는 핵심 공간) */
+/* 3. 캐릭터 구역 (중요!) */
 .human-box {
-    position: relative; /* 자식(옷 레이어)들이 겹칠 수 있게 기준점 설정 */
-    width: 300px;       /* 캐릭터 human.png의 실제 가로 크기에 맞춰 조절 가능 */
+    position: relative;
+    width: 300px; /* 캐릭터 이미지 크기 기준 */
     margin: 0 auto;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    background-color: white; /* 위치 확인을 위해 배경색 추가 (나중에 빼셔도 됨) */
 }
 
 #main-human {
     width: 100%;
     display: block;
-    z-index: 1; /* 가장 아래에 위치 */
+    z-index: 1;
 }
 
-/* 5. 캐릭터 위에 겹쳐질 옷 레이어 설정 (중요 수정 부분) */
+/* 4. 입혀지는 옷들 공통 스타일 */
 .layered-item {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain; /* 옷 비율 유지 */
-    z-index: 10;         /* 캐릭터보다 위에 보이게 함 */
-    
-    /* [수정 포인트] pointer-events를 auto로 해야 나중에 클릭해서 벗길 수 있습니다! */
-    pointer-events: auto; 
-    cursor: pointer;     /* 입혀진 옷을 클릭할 수 있다는 표시 */
-    
-    display: none;       /* 초기에는 아무것도 입지 않은 상태 */
+    left: 50%; /* 가운데 정렬 시작 */
+    transform: translateX(-50%); /* 정확히 중앙으로 이동 */
+    z-index: 10;
+    pointer-events: auto;
+    cursor: pointer;
+    display: none;
 }
 
-/* 6. 하단 바지 패널 */
+/* 5. 부위별 미세 조정 (여기 숫자를 바꾸세요!) */
+#wear-hood {
+    top: 5%;      /* 머리 위치에 맞춰 조절 */
+    width: 60%;   /* 후드 크기 조절 */
+}
+
+#wear-shirt {
+    top: 25%;     /* 상체 위치에 맞춰 조절 */
+    width: 70%;   /* 셔츠 크기 조절 */
+}
+
+#wear-pants {
+    top: 55%;     /* 하체 위치에 맞춰 조절 */
+    width: 50%;   /* 바지 크기 조절 */
+}
+
+/* 하단 바지 패널 */
 .bottom-panel {
     display: flex;
     gap: 15px;
