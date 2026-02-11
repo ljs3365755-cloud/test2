@@ -1,79 +1,67 @@
 const container = document.querySelector('.game-container');
-const items = document.querySelectorAll('.item');
+const menuItems = document.querySelectorAll('.menu-item');
 
 let dragItem = null;
 let shiftX, shiftY;
 
-// 아이템 생성 및 이동 로직
-items.forEach(item => {
-    // 1. 메뉴 아이템을 클릭하거나 터치했을 때 복사본 생성
-    const handleStart = (e) => {
+// 1. 아이템 생성 (클릭/터치 시 1회 생성)
+menuItems.forEach(menuItem => {
+    const spawn = (e) => {
         e.preventDefault();
-        const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
-        const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
-
         const newItem = document.createElement('img');
-        newItem.src = item.src;
-        newItem.className = 'dropped-item ' + item.classList[1]; // 사이즈 클래스 포함
+        newItem.src = menuItem.src;
+        // 메뉴 아이템의 클래스(사이즈)를 그대로 가져옴
+        newItem.className = 'dropped-item ' + menuItem.classList[1];
         
-        // 생성 위치를 클릭/터치한 지점으로 설정
-        newItem.style.position = 'absolute';
-        newItem.style.left = (clientX - item.offsetWidth / 2) + 'px';
-        newItem.style.top = (clientY - item.offsetHeight / 2) + 'px';
-        newItem.style.zIndex = 1000;
+        // 생성 위치: 클릭/터치한 바로 그 자리
+        const event = e.type.includes('touch') ? e.touches[0] : e;
+        newItem.style.left = (event.clientX - menuItem.offsetWidth / 2) + 'px';
+        newItem.style.top = (event.clientY - menuItem.offsetHeight / 2) + 'px';
+
+        // 배치된 아이템에 드래그 및 삭제 이벤트 연결
+        newItem.addEventListener('mousedown', startDrag);
+        newItem.addEventListener('touchstart', startDrag, { passive: false });
+        newItem.addEventListener('dblclick', () => newItem.remove());
 
         container.appendChild(newItem);
-        dragItem = newItem;
-
-        // 생성 직후 바로 드래그 상태로 전환
-        const rect = newItem.getBoundingClientRect();
-        shiftX = clientX - rect.left;
-        shiftY = clientY - rect.top;
-
-        // 새로 생성된 아이템에도 이동/삭제 이벤트 부여
-        newItem.addEventListener('mousedown', startMove);
-        newItem.addEventListener('touchstart', startMove, { passive: false });
-        newItem.addEventListener('dblclick', () => newItem.remove());
     };
 
-    item.addEventListener('mousedown', handleStart);
-    item.addEventListener('touchstart', handleStart, { passive: false });
+    menuItem.addEventListener('mousedown', spawn);
+    menuItem.addEventListener('touchstart', spawn, { passive: false });
 });
 
-// 2. 이미 배치된 아이템을 다시 잡을 때
-function startMove(e) {
+// 2. 드래그 시작 함수
+function startDrag(e) {
     e.preventDefault();
-    e.stopPropagation(); // 부모 이벤트 방해 금지
+    e.stopPropagation(); // 메뉴 아이템과 겹침 방지
     dragItem = e.target;
     
-    const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
-    const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
-
+    const event = e.type.includes('touch') ? e.touches[0] : e;
     const rect = dragItem.getBoundingClientRect();
-    shiftX = clientX - rect.left;
-    shiftY = clientY - rect.top;
+    
+    shiftX = event.clientX - rect.left;
+    shiftY = event.clientY - rect.top;
     dragItem.style.zIndex = 1000;
 }
 
-// 3. 움직임 처리 (전역)
-const onMove = (e) => {
+// 3. 마우스/터치 이동 처리
+const moveHandler = (e) => {
     if (!dragItem) return;
+    const event = e.type.includes('touch') ? e.touches[0] : e;
     
-    const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
-    const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
-
-    dragItem.style.left = (clientX - shiftX) + 'px';
-    dragItem.style.top = (clientY - shiftY) + 'px';
+    dragItem.style.left = (event.clientX - shiftX) + 'px';
+    dragItem.style.top = (event.clientY - shiftY) + 'px';
 };
 
-const onEnd = () => {
+// 4. 드래그 종료
+const endHandler = () => {
     if (dragItem) {
         dragItem.style.zIndex = 500;
         dragItem = null;
     }
 };
 
-document.addEventListener('mousemove', onMove);
-document.addEventListener('touchmove', onMove, { passive: false });
-document.addEventListener('mouseup', onEnd);
-document.addEventListener('touchend', onEnd);
+document.addEventListener('mousemove', moveHandler);
+document.addEventListener('touchmove', moveHandler, { passive: false });
+document.addEventListener('mouseup', endHandler);
+document.addEventListener('touchend', endHandler);

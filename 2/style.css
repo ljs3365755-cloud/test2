@@ -1,31 +1,39 @@
-/* 기존 코드 유지하되 아래 내용 확인/수정 */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body, html { width: 100%; height: 100%; overflow: hidden; position: fixed; }
 
 .game-container {
-    width: 100vw;
-    height: 100vh;
+    width: 100vw; height: 100vh;
     background: url('back.jpg') no-repeat center center / cover;
     position: relative;
-    overflow: hidden;
-    touch-action: none; /* 브라우저 기본 터치 동작 금지 */
+    touch-action: none; /* 모바일 줌/스크롤 절대 차단 */
 }
 
-.item {
-    cursor: grab;
-    user-select: none;
-    -webkit-user-drag: none; /* 브라우저 기본 드래그 기능 끔 */
+/* 사이드 패널: 이미지처럼 중앙 쪽으로 적절히 배치 */
+.side-panel {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; z-index: 100;
 }
+.side-panel.left { left: 10%; gap: 30px; }
+.side-panel.right { right: 10%; gap: 15px; }
 
+/* 아이템 개별 사이즈 조절 */
+.menu-item { cursor: pointer; transition: 0.2s; -webkit-user-drag: none; }
+.size-hat { width: 150px; }
+.size-hat2 { width: 150px; }
+.size-cafe { width: 180px; }
+.size-pin { width: 60px; }
+.size-ribbon { width: 80px; }
+.size-fur { width: 80px; }
+
+/* 중앙 캐릭터 */
+.center-panel {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+}
+#main-zzanggu { width: 320px; pointer-events: none; }
+
+/* 화면에 배치된 스티커 */
 .dropped-item {
-    position: absolute;
-    cursor: move;
-    touch-action: none;
-    user-select: none;
-    -webkit-user-drag: none;
-}
-
-/* 짱구 이미지가 아이템을 가리지 않도록 */
-#main-zzanggu {
-    width: 350px;
-    pointer-events: none; /* 짱구 이미지는 클릭 통과 */
-    user-select: none;
+    position: absolute; cursor: move; z-index: 500;
+    touch-action: none; -webkit-user-drag: none;
 }
