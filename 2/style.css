@@ -11,59 +11,54 @@ body, html {
     overflow: hidden;
 }
 
-/* 1. 백그라운드 이미지 설정 */
+/* 배경화면 설정 */
 .game-container {
     width: 100vw;
     height: 100vh;
-    background-image: url('background.jpg'); /* 본인의 배경 이미지 파일명으로 수정 */
-    background-size: cover;
-    background-position: center;
-    position: relative; /* 자유 배치를 위한 기준점 */
+    background: url('back.jpg') no-repeat center center / cover;
+    position: relative;
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* 양옆으로 아이콘 배치 */
     align-items: center;
+    padding: 0 40px; /* 양끝 여백 */
 }
 
-/* 사이드 패널 */
+/* 사이드 패널: 아이콘들이 세로로 예쁘게 나열됨 */
 .side-panel {
-    width: 180px;
-    height: 90vh;
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(5px); /* 배경 살짝 흐리게 해서 고급스럽게 */
-    border-radius: 20px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    padding: 20px;
-    z-index: 10;
+    gap: 20px;
+    z-index: 100;
 }
 
-/* 아이템 스타일 */
 .item {
-    width: 100px;
+    width: 100px; /* 아이콘 크기 */
     cursor: grab;
+    filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.2)); /* 아이콘 그림자 */
     transition: transform 0.2s;
 }
 
-/* 중앙 메인 캐릭터 */
+.item:hover {
+    transform: scale(1.1);
+}
+
+/* 중앙 짱구(강아지) 본체 */
 .center-panel {
-    flex-grow: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
 }
 
 #main-zzanggu {
     width: 350px;
     user-select: none;
-    -webkit-user-drag: none;
+    pointer-events: none; /* 본체는 드래그 방해 안되게 */
 }
 
-/* 3. 자유롭게 배치될 아이템 전용 클래스 */
+/* 드롭된 아이템들 */
 .dropped-item {
-    position: absolute; /* 자유 좌표 배치 */
+    position: absolute;
     cursor: move;
-    z-index: 20;
+    z-index: 50;
 }

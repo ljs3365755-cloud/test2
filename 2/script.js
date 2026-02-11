@@ -1,7 +1,10 @@
-const items = document.querySelectorAll('.item');
 const container = document.querySelector('.game-container');
+const items = document.querySelectorAll('.item');
 
-// 1. 드래그 시작 시 아이템 정보 저장
+let dragItem = null;
+let shiftX, shiftY;
+
+// 1. 원본 아이템 드래그 이벤트 (복사본 생성용)
 items.forEach(item => {
     item.addEventListener('dragstart', (e) => {
         e.dataTransfer.setData('imgSrc', e.target.src);
@@ -10,34 +13,55 @@ items.forEach(item => {
     });
 });
 
-// 2. 드롭 허용
-container.addEventListener('dragover', (e) => {
-    e.preventDefault();
-});
+container.addEventListener('dragover', (e) => e.preventDefault());
 
-// 3. 드롭했을 때 자유 좌표에 아이템 생성 (자유롭게 배치)
+// 2. 드롭 시 복사본 생성 및 배치
 container.addEventListener('drop', (e) => {
     e.preventDefault();
-    
     const imgSrc = e.dataTransfer.getData('imgSrc');
+    if (!imgSrc) return; // 배치된 거 옮길 땐 새로 안 만듦
+
     const offsetX = e.dataTransfer.getData('offsetX');
     const offsetY = e.dataTransfer.getData('offsetY');
 
-    // 새로운 이미지 엘리먼트 생성 (복사본 생성으로 2번 문제 해결)
     const newItem = document.createElement('img');
     newItem.src = imgSrc;
     newItem.classList.add('dropped-item');
-    
-    // 마우스 위치에서 클릭 지점을 보정하여 정확한 위치에 드롭 (3번 문제 해결)
+    newItem.style.width = "100px"; // 크기 고정
     newItem.style.left = (e.clientX - offsetX) + 'px';
     newItem.style.top = (e.clientY - offsetY) + 'px';
-    newItem.style.width = "100px"; // 필요시 크기 조절
 
-    // 우클릭하면 삭제되는 기능 (선택 사항)
-    newItem.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        newItem.remove();
+    addDragFeature(newItem);
+    container.appendChild(newItem);
+});
+
+// 3. 배치된 아이템을 다시 움직이게 하는 함수
+function addDragFeature(el) {
+    el.addEventListener('mousedown', (e) => {
+        if (e.button === 2) return; // 우클릭은 무시
+        dragItem = el;
+        shiftX = e.clientX - el.getBoundingClientRect().left;
+        shiftY = e.clientY - el.getBoundingClientRect().top;
+        el.style.zIndex = 1000;
     });
 
-    container.appendChild(newItem);
+    // 우클릭 시 삭제
+    el.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        el.remove();
+    });
+}
+
+// 4. 마우스 이동 처리
+document.addEventListener('mousemove', (e) => {
+    if (!dragItem) return;
+    dragItem.style.left = (e.clientX - shiftX) + 'px';
+    dragItem.style.top = (e.clientY - shiftY) + 'px';
+});
+
+document.addEventListener('mouseup', () => {
+    if (dragItem) {
+        dragItem.style.zIndex = 50;
+        dragItem = null;
+    }
 });
