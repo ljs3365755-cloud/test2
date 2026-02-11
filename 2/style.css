@@ -1,0 +1,55 @@
+/* --- 기본 배경 세팅 --- */
+.game-container {
+    width: 100vw;
+    height: 100vh;
+    background: url('background.jpg') no-repeat center center / cover;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* --- 캐릭터 배치 구역 --- */
+.zzanggu-box {
+    position: relative;
+    width: 400px; /* 캐릭터 크기에 맞춰 조절 */
+    height: 400px;
+}
+
+#main-zzanggu {
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    z-index: 10; /* 본체는 중간 */
+}
+
+/* --- 입히는 옷들 공통 설정 --- */
+.layered-item {
+    position: absolute;
+    z-index: 20; /* 본체보다 위로 */
+    display: none; /* 아이템을 놓기 전엔 숨김 */
+}
+
+/* --- ★ 여기서부터 부위별 미세 조정 (수정 가능 구간) ★ --- */
+
+/* 모자나 머리핀 위치 */
+.head-part {
+    width: 150px;   /* 아이템 크기 */
+    top: 10px;      /* 머리 위에서부터의 거리 */
+    left: 50%;      /* 중앙 정렬 기준 */
+    transform: translateX(-50%); /* 정확히 가운데 배치 */
+}
+
+/* 상의나 옷 위치 */
+.body-part {
+    width: 250px;   /* 옷 크기 */
+    bottom: 50px;   /* 아래에서부터의 거리 */
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* 악세사리나 기타 소품 */
+.acc-part {
+    width: 80px;
+    top: 150px;
+    right: 20px; /* 오른쪽에서 미세 조정 */
+}
