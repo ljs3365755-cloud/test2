@@ -1,3 +1,4 @@
+/* 기본 레이아웃 */
 body {
     display: flex;
     justify-content: center;
@@ -10,40 +11,50 @@ body {
 .game-container {
     display: flex;
     align-items: center;
-    gap: 50px; /* 구역 사이 간격 */
+    gap: 50px;
 }
 
-/* 양 옆 패널 (후드, 셔츠) */
+/* 양 옆 옷 선택 창 */
 .side-panel {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-/* 중앙 패널 (캐릭터 + 바지) */
-.center-panel {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 30px;
+.item {
+    width: 80px;
+    cursor: grab; /* 잡을 수 있다는 모양으로 변경 */
+    transition: transform 0.2s;
 }
 
-.human-box img {
-    width: 200px; /* 캐릭터 크기에 맞춰 조절하세요 */
+.item:active {
+    cursor: grabbing;
+}
+
+/* 중앙 캐릭터 구역 (핵심) */
+.human-box {
+    position: relative; /* 자식 요소들의 기준점 */
+    width: 200px; 
+    min-height: 400px;
+}
+
+#main-human {
+    width: 100%;
+    display: block;
+}
+
+/* 캐릭터 위에 겹쳐질 옷 레이어 */
+.layered-item {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    pointer-events: none; /* 입혀진 옷이 마우스 드래그를 방해하지 않게 함 */
+    z-index: 10;
 }
 
 .bottom-panel {
     display: flex;
-    gap: 20px;
-}
-
-/* 공통 아이템 스타일 */
-.item {
-    width: 80px; /* 옷 이미지 크기 */
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.item:hover {
-    transform: scale(1.1); /* 마우스 올리면 살짝 커짐 */
+    gap: 15px;
+    margin-top: 20px;
 }

@@ -9,29 +9,33 @@
 
     <div class="game-container">
         <div class="side-panel left">
-            <img src="hood.png" class="item" alt="hood">
-            <img src="hood2.png" class="item" alt="hood2">
+            <img src="hood.png" class="item" alt="hood" draggable="true">
+            <img src="hood2.png" class="item" alt="hood2" draggable="true">
         </div>
 
         <div class="center-panel">
-            <div class="human-box">
+            <div class="human-box" id="drop-target">
                 <img src="human.png" id="main-human" alt="human">
+                
+                <img src="" id="wear-hood" class="layered-item">
+                <img src="" id="wear-shirt" class="layered-item">
+                <img src="" id="wear-pants" class="layered-item">
             </div>
+            
             <div class="bottom-panel">
-                <img src="pants1.png" class="item" alt="pants1">
-                <img src="pants2.png" class="item" alt="pants2">
-                <img src="pants3.png" class="item" alt="pants3">
+                <img src="pants1.png" class="item" alt="pants1" draggable="true">
+                <img src="pants2.png" class="item" alt="pants2" draggable="true">
+                <img src="pants3.png" class="item" alt="pants3" draggable="true">
             </div>
         </div>
 
         <div class="side-panel right">
-            <img src="shirt1.png" class="item" alt="shirt1">
-            <img src="shirt2.png" class="item" alt="shirt2">
-            <img src="shirt3.png" class="item" alt="shirt3">
-            <img src="shirt4.png" class="item" alt="shirt4">
+            <img src="shirt1.png" class="item" alt="shirt1" draggable="true">
+            <img src="shirt2.png" class="item" alt="shirt2" draggable="true">
+            <img src="shirt3.png" class="item" alt="shirt3" draggable="true">
+            <img src="shirt4.png" class="item" alt="shirt4" draggable="true">
         </div>
     </div>
 
     <script src="script.js"></script>
 </body>
-</html>
