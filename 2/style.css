@@ -1,71 +1,31 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body, html { width: 100%; height: 100%; overflow: hidden; }
+/* 기존 코드 유지하되 아래 내용 확인/수정 */
 
-/* 배경: back.jpg */
 .game-container {
     width: 100vw;
     height: 100vh;
     background: url('back.jpg') no-repeat center center / cover;
     position: relative;
-}
-
-/* 왼쪽 패널: 중앙으로 더 당김 */
-.side-panel.left {
-    position: absolute;
-    left: 25%; 
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-    z-index: 100;
-}
-
-/* 오른쪽 패널: 중앙으로 더 당김 */
-.side-panel.right {
-    position: absolute;
-    right: 25%; 
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    z-index: 100;
-}
-
-.item { cursor: grab; transition: transform 0.2s; }
-
-/* --- 아이템별 개별 사이즈 조절 (여기서 숫자를 바꾸면 됨) --- */
-.size-hat { width: 250px; }
-.size-hat2 { width: 250px; }
-.size-cafe { width: 240px; }
-.size-pin { width: 100px; }
-.size-ribbon { width: 100px; }
-.size-fur { width: 90px; }
-
-/* 중앙 캐릭터 위치 */
-.center-panel {
-    position: absolute;
-    left: 50%; top: 50%;
-    transform: translate(-50%, -50%);
-}
-#main-zzanggu { width: 350px; pointer-events: none; }
-
-/* 배치된 스티커 */
-.dropped-item { position: absolute; cursor: move; z-index: 50; }
-
-.game-container {
-    touch-action: none; /* 브라우저 스크롤/확대 강제 금지 */
-    -webkit-user-select: none;
-    user-select: none;
+    overflow: hidden;
+    touch-action: none; /* 브라우저 기본 터치 동작 금지 */
 }
 
 .item {
-    pointer-events: auto !important; /* 클릭 가능하게 */
+    cursor: grab;
+    user-select: none;
+    -webkit-user-drag: none; /* 브라우저 기본 드래그 기능 끔 */
 }
 
 .dropped-item {
     position: absolute;
     cursor: move;
     touch-action: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+/* 짱구 이미지가 아이템을 가리지 않도록 */
+#main-zzanggu {
+    width: 350px;
+    pointer-events: none; /* 짱구 이미지는 클릭 통과 */
+    user-select: none;
 }
