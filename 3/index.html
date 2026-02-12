@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>도트 슬라임 시뮬레이터</title>
+    <title>도트 슬라임</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <canvas id="slimeCanvas" width="200" height="200"></canvas>
-        <p>마우스로 클릭하거나 위로 드래그해보세요!</p>
+        
+        <div class="ui-area">
+            <canvas id="foodCanvas" width="50" height="50"></canvas>
+            <p>마우스나 터치로 슬라임을 만져보세요 만지작 만지작</p>
+            <button id="feedBtn">🍙 삼각김밥 주기</button>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
