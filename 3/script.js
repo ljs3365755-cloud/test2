@@ -138,7 +138,7 @@ feedBtn.addEventListener('click', () => {
             feedCount = 0;
             state = 1;
             lastActionTime = Date.now();
-        }, 3000);
+        }, 1000);
     } else {
         // 냠냠 모션
         state = 5;
@@ -155,7 +155,7 @@ feedBtn.addEventListener('click', () => {
                 foodCanvas.style.visibility = 'hidden';
                 lastActionTime = Date.now();
             }
-        }, 2000);
+        }, 1000);
     }
 });
 
