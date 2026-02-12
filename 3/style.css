@@ -1,11 +1,11 @@
 body {
-    background-color: #f0f0f0;
+    background-color: #f7f7f7; /* 배경을 밝은 회색으로 */
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     margin: 0;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
     overflow: hidden;
 }
 
@@ -17,9 +17,9 @@ body {
 }
 
 canvas {
-    background-color: #ffffff;
-    border: 4px solid #333;
-    image-rendering: pixelated;
+    background-color: #ffffff; /* 캔버스 내부 배경은 흰색 */
+    border: 3px solid #333333; /* 검정 테두리로 영역 구분 */
+    image-rendering: pixelated; /* 도트 느낌 살리기 */
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
@@ -37,26 +37,33 @@ canvas {
     border: none;
     background: transparent;
     margin-top: 10px;
-    visibility: hidden;
+    visibility: hidden; /* 밥 줄 때만 보임 */
 }
 
 .ui-area {
     display: flex;
     flex-direction: column;
     align-items: center;
-}
-
-button {
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    background: #333;
-    color: white;
-    border: none;
-    border-radius: 5px;
     margin-top: 10px;
 }
 
+button {
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #444;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
 button:active {
-    background: #555;
+    background: #666;
+}
+
+p {
+    color: #555;
+    margin: 10px 0;
 }

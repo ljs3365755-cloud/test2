@@ -4,7 +4,7 @@ const foodCanvas = document.getElementById('foodCanvas');
 const foodCtx = foodCanvas.getContext('2d');
 const feedBtn = document.getElementById('feedBtn');
 
-// 색상 변수 확인
+// 1. 설정 및 상태 변수
 const SLIME_COLOR = "#CDB4DB"; 
 let state = 1; 
 let lastActionTime = Date.now();
@@ -15,11 +15,17 @@ let isFull = false;
 let isShaking = false; 
 let shakeOffset = 0;
 
-// 오디오 (파일이 없어도 에러로 멈추지 않게 처리)
-const squeakSound = new Audio('squeaky.mp3');
-const yumSound = new Audio('ggd-yumyum.mp3');
-const noSound = new Audio('no.mp3');
+// 2. 오디오 에러 방지 처리 (파일이 없어도 코드가 안 멈춤)
+const playSound = (audioFile) => {
+    try {
+        const sound = new Audio(audioFile);
+        sound.play().catch(() => { /* 소리 파일 없어도 무시하고 진행 */ });
+    } catch (e) {
+        console.log("사운드 재생 불가:", audioFile);
+    }
+};
 
+// 3. 삼각김밥 그리기
 function drawFood() {
     foodCtx.clearRect(0, 0, foodCanvas.width, foodCanvas.height);
     foodCtx.fillStyle = "white";
@@ -31,8 +37,8 @@ function drawFood() {
     foodCtx.fillRect(20, 32, 10, 8);
 }
 
+// 4. 슬라임 그리기 핵심 (이 부분이 실행되어야 보입니다)
 function drawSlime() {
-    // 캔버스를 깨끗하게 지우기
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     if (isShaking) {
@@ -41,6 +47,7 @@ function drawSlime() {
         shakeOffset = 0;
     }
 
+    // 하트
     if (showHeart && !isFull) {
         ctx.fillStyle = "#ff4d4d";
         const yOffset = Math.sin(Date.now() / 150) * 8;
@@ -49,9 +56,8 @@ function drawSlime() {
         ctx.fillRect(105 + shakeOffset, 25 + yOffset, 10, 10);
     }
 
-    // 슬라임 그리기 시작
+    // 몸통
     ctx.fillStyle = SLIME_COLOR; 
-    
     if (state === 3) {
         ctx.fillRect(80 + shakeOffset, 50, 40, 110);
         ctx.fillRect(70 + shakeOffset, 70, 10, 70);
@@ -60,18 +66,5 @@ function drawSlime() {
         ctx.fillRect(40 + shakeOffset, 130, 120, 30);
         ctx.fillRect(50 + shakeOffset, 120, 100, 10);
     } else {
-        // 기본 체형
         ctx.fillRect(60 + shakeOffset, 100, 80, 50);
-        ctx.fillRect(70 + shakeOffset, 90, 60, 10);
-        ctx.fillRect(50 + shakeOffset, 110, 10, 30);
-        ctx.fillRect(140 + shakeOffset, 110, 10, 30);
-    }
-
-    // 눈 그리기 (눈이 안 보이면 슬라임이 투명해 보일 수 있음)
-    ctx.fillStyle = "black";
-    if (isFull || state === 2) { 
-        ctx.fillRect(80 + shakeOffset, 112, 10, 2); 
-        ctx.fillRect(110 + shakeOffset, 112, 10, 2);
-    } else if (state === 1) { 
-        ctx.fillRect(82 + shakeOffset, 110, 6, 6); 
-        ctx.fillRect(11
+        ctx.fillRect(70 + shakeOffset,
