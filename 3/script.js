@@ -138,7 +138,7 @@ feedBtn.addEventListener('click', () => {
             feedCount = 0;
             state = 1;
             lastActionTime = Date.now();
-        }, 1000);
+        }, 10000);
     } else {
         // 냠냠 모션
         state = 5;
