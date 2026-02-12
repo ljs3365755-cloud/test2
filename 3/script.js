@@ -13,11 +13,10 @@ const cleanBar = document.getElementById('cleanBar');
 
 let state = 1; 
 let lastActionTime = Date.now();
-let isDragging = false, isFull = false, isShaking = false, isBlinking = false;
+let isDragging = false, isFull = false, isBlinking = false;
 let effectType = null;
 let shakeOffset = 0;
 
-// 초기 게이지 50% 설정
 let fullness = 50;
 let cleanliness = 50;
 let waterCount = 0;
@@ -25,11 +24,12 @@ let lastCookieTime = 0;
 
 function safePlay(filename) { try { new Audio(filename).play().catch(() => {}); } catch (e) {} }
 
-// [핵심] 효과 그리기 함수 (거품 로직 강화)
+// 효과 그리기 (거품 포함 모든 이펙트에 튀어오르는 모션 적용)
 function drawEffect(type) {
     const now = Date.now();
     const x = 100 + shakeOffset;
-    const y = 30 + Math.sin(now / 150) * 10;
+    // 하트나 물방울처럼 위아래로 통통 튀는 모션
+    const y = 35 + Math.sin(now / 150) * 12;
     
     if (type === 'heart') {
         ctx.fillStyle = "#ff4d4d";
@@ -49,19 +49,18 @@ function drawEffect(type) {
             ctx.lineTo(x+Math.cos(rot)*10, y+10+Math.sin(rot)*10); rot+=Math.PI/5;
         } ctx.fill();
     } else if (type === 'bubbles') {
-        // [복구] 비누 거품 애니메이션
-        for(let i=0; i<8; i++) {
-            const angle = (now / 400) + (i * Math.PI / 4);
-            const bx = 100 + Math.cos(angle) * 50 + shakeOffset;
-            const by = 120 + Math.sin(angle * 1.5) * 30;
-            const radius = 8 + Math.sin(now / 200 + i) * 4;
+        // [수정] 거품 모션: 몽글몽글 튀어오르는 효과
+        for (let i = 0; i < 6; i++) {
+            const offset = i * 20;
+            const bx = x - 50 + (i * 20);
+            const by = 130 + Math.sin((now + (i * 500)) / 200) * 15;
+            const size = 10 + Math.cos(now / 300 + i) * 3;
 
             ctx.beginPath();
-            ctx.arc(bx, by, radius, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+            ctx.arc(bx, by, size, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
             ctx.fill();
-            ctx.strokeStyle = "rgba(200, 200, 255, 0.5)";
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = "rgba(200, 200, 255, 0.6)";
             ctx.stroke();
         }
     }
@@ -71,103 +70,46 @@ function drawSlime() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const now = Date.now();
     const idleTime = now - lastActionTime;
-    shakeOffset = isShaking ? Math.sin(now / 50) * 15 : 0;
+    shakeOffset = 0; // 드래그 중엔 흔들림 제외
 
-    // 30초 부동 시 Zzz...
-    if (idleTime > 30000 && !isDragging && !isFull) {
+    if (idleTime > 30000 && !isDragging) {
         ctx.fillStyle = "#555"; ctx.font = "bold 18px Arial";
-        ctx.fillText("Zzz...", 135 + shakeOffset, 55 + Math.sin(now/300)*5);
+        ctx.fillText("Zzz...", 135, 55 + Math.sin(now/300)*5);
     }
 
-    // [중요] 거품은 슬라임 뒤가 아니라 '위'에 그려지도록 몸체 다음에 호출하거나, 
-    // 여기서 effectType을 체크하여 적절한 레이어에 배치합니다.
     if (effectType && effectType !== 'bubbles') drawEffect(effectType);
 
     ctx.fillStyle = SLIME_COLOR;
-    if (state === 3) {
-        ctx.fillRect(80+shakeOffset, 50, 40, 110); ctx.fillRect(70+shakeOffset, 70, 10, 70); ctx.fillRect(120+shakeOffset, 70, 10, 70);
-    } else if (state === 4 && !isFull) {
-        ctx.fillRect(40+shakeOffset, 130, 120, 30); ctx.fillRect(50+shakeOffset, 120, 100, 10);
-    } else {
-        ctx.fillRect(60+shakeOffset, 100, 80, 50); ctx.fillRect(70+shakeOffset, 90, 60, 10);
-        ctx.fillRect(50+shakeOffset, 110, 10, 30); ctx.fillRect(140+shakeOffset, 110, 10, 30);
+    let eyeY = 110; // 기본 눈 높이
+
+    if (state === 3) { // 늘어남
+        ctx.fillRect(80, 50, 40, 110);
+        ctx.fillRect(70, 70, 10, 70); ctx.fillRect(120, 70, 10, 70);
+        eyeY = 80; // 눈이 위로 따라감
+    } else if (state === 4) { // 눌림
+        ctx.fillRect(40, 130, 120, 30);
+        ctx.fillRect(50, 120, 100, 10);
+        eyeY = 135; // 눈이 아래로 내려감 [수정완료]
+    } else { // 평소
+        ctx.fillRect(60, 100, 80, 50); ctx.fillRect(70, 90, 60, 10);
+        ctx.fillRect(50, 110, 10, 30); ctx.fillRect(140, 110, 10, 30);
+        eyeY = 110;
     }
 
-    // 거품은 슬라임 몸체 위를 덮도록 여기서 다시 체크
     if (effectType === 'bubbles') drawEffect('bubbles');
 
+    // 눈 그리기 (위치 보정 반영)
     ctx.strokeStyle = "black"; ctx.lineWidth = 2.5; ctx.lineCap = "round";
-    if (isFull || (idleTime > 30000 && !isDragging) || isBlinking) {
-        ctx.beginPath(); ctx.moveTo(81+shakeOffset, 112); ctx.lineTo(89+shakeOffset, 112);
-        ctx.moveTo(111+shakeOffset, 112); ctx.lineTo(119+shakeOffset, 112); ctx.stroke();
+    if (idleTime > 30000 && !isDragging || isBlinking) {
+        ctx.beginPath(); 
+        ctx.moveTo(81, eyeY + 2); ctx.lineTo(89, eyeY + 2);
+        ctx.moveTo(111, eyeY + 2); ctx.lineTo(119, eyeY + 2);
+        ctx.stroke();
     } else if (state === 5 || effectType) {
-        ctx.beginPath(); ctx.moveTo(78+shakeOffset, 115); ctx.lineTo(85+shakeOffset, 108); ctx.lineTo(92+shakeOffset, 115);
-        ctx.moveTo(108+shakeOffset, 115); ctx.lineTo(115+shakeOffset, 108); ctx.lineTo(122+shakeOffset, 115); ctx.stroke();
+        ctx.beginPath(); 
+        ctx.moveTo(78, eyeY + 5); ctx.lineTo(85, eyeY - 2); ctx.lineTo(92, eyeY + 5);
+        ctx.moveTo(108, eyeY + 5); ctx.lineTo(115, eyeY - 2); ctx.lineTo(122, eyeY + 5);
+        ctx.stroke();
     } else {
         ctx.fillStyle = "black";
-        let eyeY = (state === 3) ? 80 : 110;
-        ctx.fillRect(82+shakeOffset, eyeY, 6, 6); ctx.fillRect(112+shakeOffset, eyeY, 6, 6);
-    }
-}
-
-function updateBars() {
-    const fPercent = Math.min(100, Math.max(0, fullness));
-    const cPercent = Math.min(100, Math.max(0, cleanliness));
-    fullnessBar.style.height = fPercent + "%";
-    cleanBar.style.height = cPercent + "%";
-}
-
-function triggerReaction(newState, newEffect, fPlus, cPlus) {
-    if (isFull) return;
-    state = newState; effectType = newEffect; lastActionTime = Date.now();
-    fullness = Math.min(100, fullness + fPlus);
-    cleanliness = Math.min(100, cleanliness + cPlus);
-    updateBars(); 
-    // 사운드 파일명이 다를 수 있으니 확인 필요
-    safePlay('ggd-yumyum.mp3'); 
-    setTimeout(() => { if (!isFull) { state = 1; effectType = null; } }, 2000);
-}
-
-buttons.feed.addEventListener('click', () => triggerReaction(5, 'heart', 2, 0));
-buttons.water.addEventListener('click', () => {
-    waterCount++; if(waterCount > 5) { alert("물을 너무 많이 마셨어요!"); waterCount = 0; }
-    else triggerReaction(5, 'water', 1, 0);
-});
-buttons.cookie.addEventListener('click', () => {
-    const now = Date.now(); if(now - lastCookieTime < 3600000) alert("쿠키는 한 시간에 한 번만!");
-    else { lastCookieTime = now; triggerReaction(5, 'star', 3, 0); }
-});
-buttons.shower.addEventListener('click', () => triggerReaction(5, 'bubbles', 0, 5));
-
-function handleStart() { if(!isFull){ isDragging = true; state = 4; lastActionTime = Date.now(); safePlay('squeaky.mp3'); }}
-function handleMove(e) {
-    if(!isDragging || isFull) return;
-    const rect = canvas.getBoundingClientRect();
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    state = (clientY - rect.top < 80) ? 3 : 4;
-}
-function handleEnd() { isDragging = false; if(!isFull) state = 1; }
-
-canvas.addEventListener('mousedown', handleStart);
-window.addEventListener('mousemove', handleMove);
-window.addEventListener('mouseup', handleEnd);
-canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleStart(); }, {passive: false});
-window.addEventListener('touchmove', (e) => { if(isDragging) e.preventDefault(); handleMove(e); }, {passive: false});
-window.addEventListener('touchend', handleEnd);
-
-// 10분마다 1% 감소
-setInterval(() => {
-    fullness = Math.max(0, fullness - 1);
-    cleanliness = Math.max(0, cleanliness - 1);
-    updateBars();
-}, 600000);
-
-function animate() {
-    const now = Date.now();
-    if(!isDragging && !isFull && state === 1 && (now - lastActionTime < 30000)) {
-        isBlinking = (now % 5500 > 5000);
-    } else isBlinking = false;
-    drawSlime(); requestAnimationFrame(animate);
-}
-
-updateBars(); animate();
+        ctx.fillRect(82, eye
