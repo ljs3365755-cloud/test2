@@ -13,9 +13,8 @@ const cleanBar = document.getElementById('cleanBar');
 
 let state = 1; 
 let lastActionTime = Date.now();
-let isDragging = false, isFull = false, isBlinking = false;
+let isDragging = false, isBlinking = false;
 let effectType = null;
-let shakeOffset = 0;
 
 let fullness = 50;
 let cleanliness = 50;
@@ -24,92 +23,138 @@ let lastCookieTime = 0;
 
 function safePlay(filename) { try { new Audio(filename).play().catch(() => {}); } catch (e) {} }
 
-// 효과 그리기 (거품 포함 모든 이펙트에 튀어오르는 모션 적용)
+// [수정] 효과 그리기 (거품 모션을 사진처럼 양옆에 배치)
 function drawEffect(type) {
     const now = Date.now();
-    const x = 100 + shakeOffset;
-    // 하트나 물방울처럼 위아래로 통통 튀는 모션
-    const y = 35 + Math.sin(now / 150) * 12;
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const bounceY = Math.sin(now / 150) * 10;
     
+    ctx.save();
     if (type === 'heart') {
         ctx.fillStyle = "#ff4d4d";
+        const x = centerX; const y = 50 + bounceY;
         ctx.beginPath(); ctx.moveTo(x, y+5);
         ctx.quadraticCurveTo(x, y-10, x-15, y-10); ctx.quadraticCurveTo(x-30, y-10, x-30, y+5);
         ctx.quadraticCurveTo(x-30, y+20, x, y+35); ctx.quadraticCurveTo(x+30, y+20, x+30, y+5);
         ctx.quadraticCurveTo(x+30, y-10, x+15, y-10); ctx.quadraticCurveTo(x, y-10, x, y+5); ctx.fill();
     } else if (type === 'water') {
         ctx.fillStyle = "#3A86FF";
-        ctx.beginPath(); ctx.moveTo(x, y-5);
-        ctx.bezierCurveTo(x-15, y+10, x-15, y+30, x, y+30); ctx.bezierCurveTo(x+15, y+30, x+15, y+10, x, y-5); ctx.fill();
-    } else if (type === 'star') {
-        ctx.fillStyle = "#FFD700";
-        let rot = Math.PI/2*3; ctx.beginPath();
-        for(let i=0; i<5; i++){
-            ctx.lineTo(x+Math.cos(rot)*20, y+10+Math.sin(rot)*20); rot+=Math.PI/5;
-            ctx.lineTo(x+Math.cos(rot)*10, y+10+Math.sin(rot)*10); rot+=Math.PI/5;
-        } ctx.fill();
+        ctx.beginPath(); ctx.arc(centerX, 60 + bounceY, 15, 0, Math.PI * 2); ctx.fill();
     } else if (type === 'bubbles') {
-        // [수정] 거품 모션: 몽글몽글 튀어오르는 효과
-        for (let i = 0; i < 6; i++) {
-            const offset = i * 20;
-            const bx = x - 50 + (i * 20);
-            const by = 130 + Math.sin((now + (i * 500)) / 200) * 15;
-            const size = 10 + Math.cos(now / 300 + i) * 3;
-
+        // [수정] 보내주신 사진(image_fca425.png)처럼 양옆에 몽글몽글하게 배치
+        const bubblePoints = [
+            {x: -60, y: 20}, {x: -45, y: -10}, {x: -70, y: -30}, 
+            {x: 60, y: 10}, {x: 50, y: -20}, {x: 75, y: 0}
+        ];
+        bubblePoints.forEach((p, i) => {
+            const bx = centerX + p.x;
+            const by = centerY + p.y + Math.sin(now/200 + i)*5;
+            const size = 15 + Math.sin(now/300 + i)*5;
             ctx.beginPath();
-            ctx.arc(bx, by, size, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-            ctx.fill();
-            ctx.strokeStyle = "rgba(200, 200, 255, 0.6)";
-            ctx.stroke();
-        }
+            ctx.arc(bx, by, size, 0, Math.PI*2);
+            ctx.fillStyle = "rgba(173, 216, 230, 0.4)"; ctx.fill();
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.8)"; ctx.stroke();
+        });
     }
+    ctx.restore();
 }
 
+// [핵심] 슬라임 그리기 (좌표를 canvas.width/2 기준으로 고정)
 function drawSlime() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const now = Date.now();
     const idleTime = now - lastActionTime;
-    shakeOffset = 0; // 드래그 중엔 흔들림 제외
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
 
     if (idleTime > 30000 && !isDragging) {
-        ctx.fillStyle = "#555"; ctx.font = "bold 18px Arial";
-        ctx.fillText("Zzz...", 135, 55 + Math.sin(now/300)*5);
+        ctx.fillStyle = "#555"; ctx.font = "bold 16px Arial";
+        ctx.fillText("Zzz...", centerX + 40, centerY - 50);
     }
 
     if (effectType && effectType !== 'bubbles') drawEffect(effectType);
 
     ctx.fillStyle = SLIME_COLOR;
-    let eyeY = 110; // 기본 눈 높이
+    let eyeY = centerY + 10;
 
+    // 슬라임 몸체 (중앙 기준)
     if (state === 3) { // 늘어남
-        ctx.fillRect(80, 50, 40, 110);
-        ctx.fillRect(70, 70, 10, 70); ctx.fillRect(120, 70, 10, 70);
-        eyeY = 80; // 눈이 위로 따라감
+        ctx.fillRect(centerX - 20, centerY - 50, 40, 100);
+        ctx.fillRect(centerX - 30, centerY - 30, 10, 60);
+        ctx.fillRect(centerX + 20, centerY - 30, 10, 60);
+        eyeY = centerY - 20; // 눈이 위로 따라감
     } else if (state === 4) { // 눌림
-        ctx.fillRect(40, 130, 120, 30);
-        ctx.fillRect(50, 120, 100, 10);
-        eyeY = 135; // 눈이 아래로 내려감 [수정완료]
+        ctx.fillRect(centerX - 60, centerY + 20, 120, 30);
+        ctx.fillRect(centerX - 50, centerY + 10, 100, 10);
+        eyeY = centerY + 25; // 눈이 아래로 확실히 내려감
     } else { // 평소
-        ctx.fillRect(60, 100, 80, 50); ctx.fillRect(70, 90, 60, 10);
-        ctx.fillRect(50, 110, 10, 30); ctx.fillRect(140, 110, 10, 30);
-        eyeY = 110;
+        ctx.fillRect(centerX - 40, centerY, 80, 50);
+        ctx.fillRect(centerX - 30, centerY - 10, 60, 10);
+        ctx.fillRect(centerX - 50, centerY + 10, 10, 30);
+        ctx.fillRect(centerX + 40, centerY + 10, 10, 30);
+        eyeY = centerY + 15;
     }
 
     if (effectType === 'bubbles') drawEffect('bubbles');
 
-    // 눈 그리기 (위치 보정 반영)
+    // 눈 그리기
     ctx.strokeStyle = "black"; ctx.lineWidth = 2.5; ctx.lineCap = "round";
-    if (idleTime > 30000 && !isDragging || isBlinking) {
-        ctx.beginPath(); 
-        ctx.moveTo(81, eyeY + 2); ctx.lineTo(89, eyeY + 2);
-        ctx.moveTo(111, eyeY + 2); ctx.lineTo(119, eyeY + 2);
+    if (isBlinking || (idleTime > 30000 && !isDragging)) {
+        ctx.beginPath();
+        ctx.moveTo(centerX - 18, eyeY); ctx.lineTo(centerX - 8, eyeY);
+        ctx.moveTo(centerX + 8, eyeY); ctx.lineTo(centerX + 18, eyeY);
         ctx.stroke();
     } else if (state === 5 || effectType) {
-        ctx.beginPath(); 
-        ctx.moveTo(78, eyeY + 5); ctx.lineTo(85, eyeY - 2); ctx.lineTo(92, eyeY + 5);
-        ctx.moveTo(108, eyeY + 5); ctx.lineTo(115, eyeY - 2); ctx.lineTo(122, eyeY + 5);
+        ctx.beginPath();
+        ctx.moveTo(centerX - 22, eyeY + 5); ctx.lineTo(centerX - 15, eyeY); ctx.lineTo(centerX - 8, eyeY + 5);
+        ctx.moveTo(centerX + 8, eyeY + 5); ctx.lineTo(centerX + 15, eyeY); ctx.lineTo(centerX + 22, eyeY + 5);
         ctx.stroke();
     } else {
         ctx.fillStyle = "black";
-        ctx.fillRect(82, eye
+        ctx.fillRect(centerX - 18, eyeY - 3, 6, 6);
+        ctx.fillRect(centerX + 12, eyeY - 3, 6, 6);
+    }
+}
+
+function updateBars() {
+    fullnessBar.style.height = Math.min(100, Math.max(0, fullness)) + "%";
+    cleanBar.style.height = Math.min(100, Math.max(0, cleanliness)) + "%";
+}
+
+function triggerReaction(newState, newEffect, fPlus, cPlus) {
+    state = newState; effectType = newEffect; lastActionTime = Date.now();
+    fullness = Math.min(100, fullness + fPlus);
+    cleanliness = Math.min(100, cleanliness + cPlus);
+    updateBars();
+    setTimeout(() => { if(!isDragging) { state = 1; effectType = null; } }, 2000);
+}
+
+buttons.feed.addEventListener('click', () => triggerReaction(5, 'heart', 5, 0));
+buttons.water.addEventListener('click', () => triggerReaction(5, 'water', 2, 0));
+buttons.cookie.addEventListener('click', () => triggerReaction(5, 'star', 10, 0));
+buttons.shower.addEventListener('click', () => triggerReaction(5, 'bubbles', 0, 10));
+
+function handleStart() { isDragging = true; state = 4; lastActionTime = Date.now(); }
+function handleMove(e) {
+    if(!isDragging) return;
+    const rect = canvas.getBoundingClientRect();
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    state = (clientY - rect.top < 100) ? 3 : 4;
+}
+function handleEnd() { isDragging = false; state = 1; }
+
+canvas.addEventListener('mousedown', handleStart);
+window.addEventListener('mousemove', handleMove);
+window.addEventListener('mouseup', handleEnd);
+canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleStart(); }, {passive: false});
+window.addEventListener('touchmove', (e) => { if(isDragging) e.preventDefault(); handleMove(e); }, {passive: false});
+window.addEventListener('touchend', handleEnd);
+
+function animate() {
+    const now = Date.now();
+    isBlinking = (!isDragging && state === 1 && now % 5000 > 4700);
+    drawSlime(); requestAnimationFrame(animate);
+}
+
+updateBars(); animate();
