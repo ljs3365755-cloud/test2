@@ -36,10 +36,10 @@ body {
     width: 300px;
     height: 300px;
     border: 3px solid #333;
-    image-rendering: pixelated; /* 픽셀 선명도 유지 */
+    image-rendering: pixelated;
+    cursor: pointer;
 }
 
-/* 게이지 바 및 아이콘 레이아웃 */
 .status-bars { display: flex; gap: 15px; align-items: flex-end; }
 .status-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 
@@ -58,7 +58,7 @@ body {
 .fullness { background: #FF9F1C; }
 .cleanliness { background: #2EC4B6; }
 
-.label-icon { font-size: 22px; line-height: 1; }
+.label-icon { font-size: 22px; }
 
 .ui-area { margin-top: 40px; text-align: center; }
 .button-group { display: flex; gap: 15px; }
