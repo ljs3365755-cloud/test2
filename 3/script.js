@@ -107,29 +107,48 @@ function drawEffect(type, cx, cy) {
 // 상호작용 처리
 function trigger(type, fChange, cChange) {
     const now = Date.now();
+    const soundEat = document.getElementById('soundEat');
+    const soundReject = document.getElementById('soundReject');
+
+    // 1. 거부 상황 체크 (배부름 혹은 쿠키 쿨타임)
+    let isRejected = false;
+    if (type === 'feed' && isFullState) isRejected = true;
+    if (type === 'cookie' && (now - lastCookieTime < 3600000)) isRejected = true;
+
+    if (isRejected) {
+        // [추가] 거부 소리 (no.mp3)
+        if(soundReject) { soundReject.currentTime = 0; soundReject.play(); }
+        
+        if (type === 'feed') alert("아직 배부르대요!");
+        else {
+            const left = Math.ceil((3600000 - (now - lastCookieTime)) / 60000);
+            alert(`쿠키는 1시간에 한 번만! (${left}분 남음)`);
+        }
+        return; 
+    }
+
+    // 2. 정상 실행 (먹기/씻기)
+    // [추가] 먹는 소리 (ggd-yumyum.mp3)
+    if(soundEat) { soundEat.currentTime = 0; soundEat.play(); }
+
     if (type === 'feed') {
-        if (isFullState) { alert("아직 배부르대요!"); return; }
         feedCount++;
         if (feedCount >= 5) {
             isFullState = true;
             setTimeout(() => { isFullState = false; feedCount = 0; }, 10000);
         }
     }
-    if (type === 'cookie') {
-        if (now - lastCookieTime < 3600000) { 
-            const left = Math.ceil((3600000 - (now - lastCookieTime)) / 60000);
-            alert(`쿠키는 1시간에 한 번만! (${left}분 남음)`); return; 
-        }
-        lastCookieTime = now;
-    }
+    if (type === 'cookie') lastCookieTime = now;
 
-    state = 5; effect = type === 'feed' ? 'heart' : type === 'water' ? 'water' : type === 'cookie' ? 'star' : 'bubbles';
+    // 상태 변경 및 게이지 업데이트
+    state = 5; 
+    effect = type === 'feed' ? 'heart' : type === 'water' ? 'water' : type === 'cookie' ? 'star' : 'bubbles';
     fullness = Math.min(100, fullness + fChange);
     cleanliness = Math.min(100, cleanliness + cChange);
-    lastActionTime = now; updateBars();
+    lastActionTime = now; 
+    updateBars();
     setTimeout(() => { state = 1; effect = null; }, 2000);
 }
-
 // 15. 게이지 감소 로직
 setInterval(() => {
     fullness = Math.max(0, fullness - (1/1200));
@@ -145,11 +164,14 @@ function updateBars() {
 }
 
 // 2, 3. 드래그 및 클릭 이벤트
-canvas.onmousedown = () => { isDragging = true; state = 4; lastActionTime = Date.now(); };
-window.onmousemove = (e) => {
-    if (!isDragging) return;
-    const rect = canvas.getBoundingClientRect();
-    state = (e.clientY - rect.top < 100) ? 3 : 4;
+canvas.onmousedown = () => { 
+    isDragging = true; 
+    state = 4; 
+    lastActionTime = Date.now();
+    
+    // [추가] 슬라임 누를 때 소리
+    const snd = document.getElementById('soundSelect');
+    if(snd) { snd.currentTime = 0; snd.play(); } 
 };
 window.onmouseup = () => { isDragging = false; state = 1; };
 
