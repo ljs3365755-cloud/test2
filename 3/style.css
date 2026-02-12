@@ -1,3 +1,4 @@
+/* 기본 배경 및 레이아웃 */
 body {
     background-color: #f7f7f7;
     margin: 0;
@@ -8,8 +9,13 @@ body {
     font-family: sans-serif;
 }
 
-.container { display: flex; flex-direction: column; align-items: center; }
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
+/* 슬라임 이름 입력창 */
 #slimeName {
     border: none;
     border-bottom: 2px solid #CDB4DB;
@@ -22,6 +28,7 @@ body {
     margin-bottom: 25px;
 }
 
+/* 게임 영역 박스 */
 .game-area {
     display: flex;
     align-items: center;
@@ -32,17 +39,31 @@ body {
     box-shadow: 0 10px 30px rgba(0,0,0,0.05);
 }
 
+/* 슬라임 캔버스 */
 #slimeCanvas {
     width: 300px;
     height: 300px;
     border: 3px solid #333;
-    image-rendering: pixelated;
+    image-rendering: pixelated; /* 픽셀 스타일 유지 */
     cursor: pointer;
 }
 
-.status-bars { display: flex; gap: 15px; align-items: flex-end; }
-.status-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+/* 게이지 바 및 하단 아이콘 수직 정렬 */
+.status-bars {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end; /* 바닥 기준 정렬 */
+}
 
+.status-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px; /* 게이지 바와 아이콘 사이 간격 */
+    margin-bottom: -5px; /* 아이콘 위치 미세 조정 */
+}
+
+/* 게이지 바 본체 */
 .bar-container {
     width: 26px;
     height: 180px;
@@ -50,21 +71,53 @@ body {
     border: 2px solid #333;
     border-radius: 13px;
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column-reverse; /* 아래에서 위로 차오름 */
     overflow: hidden;
 }
 
-.bar { width: 100%; transition: height 0.3s ease; }
-.fullness { background: #FF9F1C; }
-.cleanliness { background: #2EC4B6; }
-
-.label-icon { font-size: 22px; }
-
-.ui-area { margin-top: 40px; text-align: center; }
-.button-group { display: flex; gap: 15px; }
-button {
-    width: 60px; height: 60px; font-size: 28px;
-    background: white; border: 2px solid #333; border-radius: 50%;
-    cursor: pointer; transition: transform 0.1s;
+.bar {
+    width: 100%;
+    transition: height 0.3s ease;
 }
-button:active { transform: scale(0.9); }
+
+.fullness { background: #FF9F1C; } /* 주황색 */
+.cleanliness { background: #2EC4B6; } /* 파란색 */
+
+/* [복구 완료] 게이지 바 바로 아래 아이콘 */
+.label-icon {
+    font-size: 22px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 하단 상호작용 UI 영역 */
+.ui-area {
+    margin-top: 40px;
+    text-align: center;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+}
+
+/* 둥근 버튼 */
+button {
+    width: 65px;
+    height: 65px;
+    font-size: 30px;
+    background: white;
+    border: 2px solid #333;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.1s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+button:active {
+    transform: scale(0.9);
+}
