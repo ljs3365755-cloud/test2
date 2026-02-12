@@ -1,62 +1,53 @@
-// 1. 설정: 슬라임 색상 및 상태 변수
 const SLIME_COLOR = "#CDB4DB"; 
 const canvas = document.getElementById('slimeCanvas');
 const ctx = canvas.getContext('2d');
-const foodCanvas = document.getElementById('foodCanvas');
-const foodCtx = foodCanvas.getContext('2d');
 const feedBtn = document.getElementById('feedBtn');
+const waterBtn = document.getElementById('waterBtn');
+const cookieBtn = document.getElementById('cookieBtn');
 
-let state = 1; // 1:평소, 2:눈감음, 3:늘어남, 4:눌림, 5:행복(^^)
+let state = 1; // 1:평소, 2:눈감음, 3:늘어남, 4:눌림, 5:행복, 6:별눈
 let lastActionTime = Date.now();
 let isDragging = false;
-let showHeart = false;
-
-// 거절 관련 변수
+let effectType = null; // 'heart', 'water'
 let feedCount = 0;
 let isFull = false;
 let isShaking = false; 
 let shakeOffset = 0;
 
-// 2. 오디오 안전 재생 함수
 function safePlay(filename) {
-    try {
-        const audio = new Audio(filename);
-        audio.play().catch(() => {}); 
-    } catch (e) {}
+    try { new Audio(filename).play().catch(() => {}); } catch (e) {}
 }
 
-// 3. 삼각김밥 도트 그리기
-function drawFood() {
-    foodCtx.clearRect(0, 0, foodCanvas.width, foodCanvas.height);
-    foodCtx.fillStyle = "white";
-    foodCtx.fillRect(20, 15, 10, 5);
-    foodCtx.fillRect(15, 20, 20, 5);
-    foodCtx.fillRect(10, 25, 30, 5);
-    foodCtx.fillRect(5, 30, 40, 10);
-    foodCtx.fillStyle = "black";
-    foodCtx.fillRect(20, 32, 10, 8);
-}
-
-// 4. 슬라임 그리기
 function drawSlime() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const now = Date.now();
+    const idleTime = now - lastActionTime;
     
-    if (isShaking) {
-        shakeOffset = Math.sin(Date.now() / 50) * 15;
-    } else {
-        shakeOffset = 0;
+    // 도리도리 계산
+    shakeOffset = isShaking ? Math.sin(now / 50) * 15 : 0;
+
+    // 15초 이상 반응 없을 시 Zzz... 표시
+    if (idleTime > 15000 && !isDragging && !isFull) {
+        ctx.fillStyle = "#555";
+        ctx.font = "bold 16px Arial";
+        ctx.fillText("Zzz...", 130 + shakeOffset, 60 + Math.sin(now / 300) * 5);
     }
 
-    if (showHeart && !isFull) {
-        ctx.fillStyle = "#ff4d4d";
-        const yOffset = Math.sin(Date.now() / 150) * 8;
-        ctx.fillRect(95 + shakeOffset, 30 + yOffset, 10, 10);
-        ctx.fillRect(85 + shakeOffset, 25 + yOffset, 10, 10);
-        ctx.fillRect(105 + shakeOffset, 25 + yOffset, 10, 10);
+    // 아이템 효과 (하트 또는 물방울)
+    if (effectType && !isFull) {
+        if (effectType === 'heart') {
+            ctx.fillStyle = "#ff4d4d";
+            ctx.fillRect(95 + shakeOffset, 30 + Math.sin(now / 150) * 8, 10, 10);
+        } else if (effectType === 'water') {
+            ctx.fillStyle = "#3A86FF";
+            ctx.beginPath(); // 물방울 모양
+            ctx.arc(100 + shakeOffset, 35 + Math.sin(now / 150) * 10, 6, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 
-    ctx.fillStyle = SLIME_COLOR; 
-    
+    // 몸체 그리기
+    ctx.fillStyle = SLIME_COLOR;
     if (state === 3) {
         ctx.fillRect(80 + shakeOffset, 50, 40, 110);
         ctx.fillRect(70 + shakeOffset, 70, 10, 70);
@@ -71,98 +62,75 @@ function drawSlime() {
         ctx.fillRect(140 + shakeOffset, 110, 10, 30);
     }
 
-    // [수정 1] 모든 상태에서 눈이 보이도록 설정
+    // 눈 그리기
     ctx.fillStyle = "black";
-    if (isFull || state === 2) { 
-        // 거절/눈감음 (ㅡ ㅡ)
+    if (isFull || (state === 2 && !isDragging)) { // 눈 감음
         ctx.fillRect(80 + shakeOffset, 112, 10, 2); 
         ctx.fillRect(110 + shakeOffset, 112, 10, 2);
-    } else if (state === 4) {
-        // 눌렸을 때 눈 (> <) - 기존에 누락되었던 부분 추가
-        ctx.fillRect(70 + shakeOffset, 136, 2, 2); ctx.fillRect(72 + shakeOffset, 138, 2, 2); ctx.fillRect(74 + shakeOffset, 140, 2, 2);
-        ctx.fillRect(72 + shakeOffset, 142, 2, 2); ctx.fillRect(70 + shakeOffset, 144, 2, 2);
-        ctx.fillRect(126 + shakeOffset, 136, 2, 2); ctx.fillRect(124 + shakeOffset, 138, 2, 2); ctx.fillRect(122 + shakeOffset, 140, 2, 2);
-        ctx.fillRect(124 + shakeOffset, 142, 2, 2); ctx.fillRect(126 + shakeOffset, 144, 2, 2);
-    } else if (state === 5) {
-        // 행복 (^^)
-        ctx.fillRect(75 + shakeOffset, 112, 2, 2); ctx.fillRect(77 + shakeOffset, 110, 4, 2); ctx.fillRect(81 + shakeOffset, 112, 2, 2);
-        ctx.fillRect(115 + shakeOffset, 112, 2, 2); ctx.fillRect(117 + shakeOffset, 110, 4, 2); ctx.fillRect(121 + shakeOffset, 112, 2, 2);
-    } else {
-        // 평소/늘어남 (● ●)
+    } else if (state === 6) { // 별 모양 눈 (쿠키)
+        ctx.fillStyle = "#FFD700"; // 금색 별
+        drawStar(85 + shakeOffset, 110, 5, 8, 4);
+        drawStar(115 + shakeOffset, 110, 5, 8, 4);
+    } else if (state === 4) { // > <
+        ctx.fillRect(70+shakeOffset, 136, 6, 2); ctx.fillRect(126+shakeOffset, 136, 6, 2);
+    } else if (state === 5) { // ^^
+        ctx.fillRect(77+shakeOffset, 110, 6, 2); ctx.fillRect(117+shakeOffset, 110, 6, 2);
+    } else { // 기본 눈
         let eyeY = (state === 3) ? 80 : 110;
-        let eyeX1 = (state === 3) ? 86 : 82;
-        let eyeX2 = (state === 3) ? 110 : 112;
-        ctx.fillRect(eyeX1 + shakeOffset, eyeY, 6, 6); 
-        ctx.fillRect(eyeX2 + shakeOffset, eyeY, 6, 6);
+        ctx.fillRect(82+shakeOffset, eyeY, 6, 6); ctx.fillRect(112+shakeOffset, eyeY, 6, 6);
     }
 }
 
-// 5. 상호작용
-function handleStart(e) {
-    if(isFull) return;
-    isDragging = true; state = 4; lastActionTime = Date.now();
-    safePlay('squeaky.mp3');
+function drawStar(cx, cy, spikes, outerRadius, innerRadius) {
+    let rot = Math.PI / 2 * 3; let x = cx; let y = cy; let step = Math.PI / spikes;
+    ctx.beginPath(); ctx.moveTo(cx, cy - outerRadius);
+    for (let i = 0; i < spikes; i++) {
+        x = cx + Math.cos(rot) * outerRadius; y = cy + Math.sin(rot) * outerRadius;
+        ctx.lineTo(x, y); rot += step;
+        x = cx + Math.cos(rot) * innerRadius; y = cy + Math.sin(rot) * innerRadius;
+        ctx.lineTo(x, y); rot += step;
+    }
+    ctx.lineTo(cx, cy - outerRadius); ctx.closePath(); ctx.fill();
 }
-function handleMove(e) {
-    if (!isDragging) return;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const rect = canvas.getBoundingClientRect();
-    state = (clientY - rect.top < 70) ? 3 : 4;
+
+// 공통 반응 함수
+function triggerReaction(newState, newEffect, sound) {
+    if (isFull) { alert("슬라임이 아직 배가 부릅니다!"); return; }
+    state = newState; effectType = newEffect; lastActionTime = Date.now();
+    safePlay(sound);
+    setTimeout(() => { if(!isFull) { state = 1; effectType = null; } }, 2000);
 }
-function handleEnd() { isDragging = false; if(!isFull) state = 1; }
 
-canvas.addEventListener('mousedown', handleStart);
-canvas.addEventListener('touchstart', (e) => { handleStart(e); e.preventDefault(); }, {passive: false});
-window.addEventListener('mousemove', handleMove);
-window.addEventListener('touchmove', (e) => { handleMove(e); e.preventDefault(); }, {passive: false});
-window.addEventListener('mouseup', handleEnd);
-window.addEventListener('touchend', handleEnd);
-
-// 6. [수정 2] 음식 주기 버튼 이벤트 (알림창 재출력 로직)
+// 아이콘 클릭 이벤트
 feedBtn.addEventListener('click', () => {
-    if (isFull) {
-        // 10초 이내에 다시 누르면 알림창 재출력
-        alert("슬라임이 아직 배가 부릅니다! 잠시만 기다려주세요.");
-        return;
-    }
-
     feedCount++;
-
     if (feedCount >= 5) {
-        isFull = true; isShaking = true;
-        showHeart = false;
-        foodCanvas.style.visibility = 'hidden';
-        safePlay('no.mp3');
-        alert("슬라임이 너무 배가 부릅니다! (10초간 휴식)");
-
+        isFull = true; isShaking = true; safePlay('no.mp3');
+        alert("너무 배불러요! (10초 휴식)");
         setTimeout(() => { isShaking = false; }, 2000);
-        setTimeout(() => {
-            isFull = false; feedCount = 0; state = 1;
-            lastActionTime = Date.now();
-        }, 10000);
-    } else {
-        state = 5; showHeart = true; foodCanvas.style.visibility = 'visible';
-        safePlay('ggd-yumyum.mp3');
-        drawFood();
-        setTimeout(() => {
-            if (!isFull) {
-                state = 1; showHeart = false;
-                foodCanvas.style.visibility = 'hidden';
-                lastActionTime = Date.now();
-            }
-        }, 2000);
-    }
+        setTimeout(() => { isFull = false; feedCount = 0; state = 1; lastActionTime = Date.now(); }, 10000);
+    } else { triggerReaction(5, 'heart', 'ggd-yumyum.mp3'); }
 });
 
+waterBtn.addEventListener('click', () => triggerReaction(5, 'water', 'ggd-yumyum.mp3'));
+cookieBtn.addEventListener('click', () => triggerReaction(6, 'heart', 'ggd-yumyum.mp3'));
+
+// 상호작용 로직
+canvas.addEventListener('mousedown', () => { if(!isFull){ isDragging = true; state = 4; lastActionTime = Date.now(); safePlay('squeaky.mp3'); }});
+window.addEventListener('mousemove', (e) => { 
+    if (isDragging) {
+        const rect = canvas.getBoundingClientRect();
+        state = (e.clientY - rect.top < 70) ? 3 : 4;
+    }
+});
+window.addEventListener('mouseup', () => { isDragging = false; if(!isFull) state = 1; });
+
 function animate() {
-    const now = Date.now();
-    if (!isDragging && state !== 4 && state !== 5 && !isFull) {
-        if (now - lastActionTime > 3000) state = 2;
-        else state = 1;
+    // 눈 감기 오류 수정: 3초 후 눈 감고, 움직임 발생 시 즉시 해제
+    if (!isDragging && !isFull && ![5,6].includes(state)) {
+        state = (Date.now() - lastActionTime > 3000) ? 2 : 1;
     }
     drawSlime();
     requestAnimationFrame(animate);
 }
-
-drawFood();
 animate();
