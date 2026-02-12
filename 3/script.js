@@ -34,7 +34,6 @@ function drawSlime() {
         ctx.fillText("Zzz...", cx + 60, cy - 80 + Math.sin(now/400)*8);
     }
 
-    // 상호작용 강제 상태 적용
     if (state !== 1) currentDisplayState = state;
     
     // 11. 배부름 좌우 흔들기
@@ -90,53 +89,7 @@ function drawSlime() {
     }
 
     if (effect) drawEffect(effect, cx, cy);
-} 
-
-// 상호작용 강제 상태 적용
-    if (state !== 1) currentDisplayState = state;
-    
-    // 11. 배부름 좌우 흔들기
-    let offsetX = 0;
-    if (isFullState) {
-        currentDisplayState = 2;
-        offsetX = Math.sin(now / 100) * 5;
-    }
-
-    ctx.fillStyle = SLIME_COLOR;
-    // 몸체 픽셀 (이미지 번호별 대응)
-    if (currentDisplayState === 3) { // 3번 늘어남
-        ctx.fillRect(cx-10+offsetX, cy-110, 20, 10); ctx.fillRect(cx-20+offsetX, cy-100, 40, 10);
-        ctx.fillRect(cx-30+offsetX, cy-90, 60, 100); ctx.fillRect(cx-20+offsetX, cy+10, 40, 10);
-    } else if (currentDisplayState === 4) { // 4번 클릭 상태
-        ctx.fillRect(cx-45+offsetX, cy-50, 90, 40); ctx.fillRect(cx-55+offsetX, cy-40, 110, 20);
-    } else { // 1, 2번 기본/눈감음
-        ctx.fillRect(cx-30+offsetX, cy-70, 60, 10); ctx.fillRect(cx-40+offsetX, cy-60, 80, 10);
-        ctx.fillRect(cx-50+offsetX, cy-50, 100, 40); ctx.fillRect(cx-40+offsetX, cy-10, 80, 10);
-    }
-
-    // 눈 그리기
-    const eyeY = (currentDisplayState === 3) ? cy-65 : cy-35;
-    ctx.strokeStyle = "black"; ctx.lineWidth = 4; ctx.lineCap = "round";
-    
-    if (currentDisplayState === 1) { // 1번 점눈
-        ctx.fillStyle = "black";
-        ctx.fillRect(cx-20+offsetX, eyeY-4, 8, 8); ctx.fillRect(cx+12+offsetX, eyeY-4, 8, 8);
-    } else if (currentDisplayState === 2) { // 2번 감은눈
-        ctx.beginPath(); ctx.moveTo(cx-22+offsetX, eyeY); ctx.lineTo(cx-10+offsetX, eyeY);
-        ctx.moveTo(cx+10+offsetX, eyeY); ctx.lineTo(cx+22+offsetX, eyeY); ctx.stroke();
-    } else if (currentDisplayState === 4) { // 4번 > < 눈
-        ctx.beginPath();
-        ctx.moveTo(cx-25+offsetX, eyeY-5); ctx.lineTo(cx-15+offsetX, eyeY); ctx.lineTo(cx-25+offsetX, eyeY+5);
-        ctx.moveTo(cx+25+offsetX, eyeY-5); ctx.lineTo(cx+15+offsetX, eyeY); ctx.lineTo(cx+25+offsetX, eyeY+5);
-        ctx.stroke();
-    } else if (currentDisplayState === 5) { // ^^ 눈
-        ctx.beginPath();
-        ctx.moveTo(cx-25+offsetX, eyeY+3); ctx.lineTo(cx-18+offsetX, eyeY-4); ctx.lineTo(cx-11+offsetX, eyeY+3);
-        ctx.moveTo(cx+11+offsetX, eyeY+3); ctx.lineTo(cx+18+offsetX, eyeY-4); ctx.lineTo(cx+25+offsetX, eyeY+3);
-        ctx.stroke();
-    }
-
-    if (effect) drawEffect(effect, cx, cy);
+} // drawSlime 함수 끝
 
 // 6~9. 특수 효과 구현
 function drawEffect(type, cx, cy) {
@@ -154,7 +107,6 @@ function drawEffect(type, cx, cy) {
 // 상호작용 처리
 function trigger(type, fChange, cChange) {
     const now = Date.now();
-    // 12, 13 제약 사항 체크
     if (type === 'feed') {
         if (isFullState) { alert("아직 배부르대요!"); return; }
         feedCount++;
@@ -175,19 +127,21 @@ function trigger(type, fChange, cChange) {
     fullness = Math.min(100, fullness + fChange);
     cleanliness = Math.min(100, cleanliness + cChange);
     lastActionTime = now; updateBars();
-    setTimeout(() => { state = 1; effect = null; }, 2000); // 10. 2초 유지
+    setTimeout(() => { state = 1; effect = null; }, 2000);
 }
 
-// 15. 20분당 1% 감소 로직 (0.05% per minute)
+// 15. 게이지 감소 로직
 setInterval(() => {
-    fullness = Math.max(0, fullness - (1/1200)); // 20분=1200초
+    fullness = Math.max(0, fullness - (1/1200));
     cleanliness = Math.max(0, cleanliness - (1/1200));
     updateBars();
 }, 1000);
 
 function updateBars() {
-    document.getElementById('fullBar').style.height = fullness + "%";
-    document.getElementById('cleanBar').style.height = cleanliness + "%";
+    const fb = document.getElementById('fullBar');
+    const cb = document.getElementById('cleanBar');
+    if(fb) fb.style.height = fullness + "%";
+    if(cb) cb.style.height = cleanliness + "%";
 }
 
 // 2, 3. 드래그 및 클릭 이벤트
@@ -199,11 +153,11 @@ window.onmousemove = (e) => {
 };
 window.onmouseup = () => { isDragging = false; state = 1; };
 
-// 버튼 연결 (16. 수치 적용)
+// 버튼 연결
 document.getElementById('feedBtn').onclick = () => trigger('feed', 1, 0);
 document.getElementById('waterBtn').onclick = () => trigger('water', 1, 0);
 document.getElementById('cookieBtn').onclick = () => trigger('cookie', 2, 0);
 document.getElementById('showerBtn').onclick = () => trigger('bubbles', 0, 10);
 
 function animate() { drawSlime(); requestAnimationFrame(animate); }
-animate(); updateBars(); // 14. 초기 50% 설정
+animate(); updateBars();
