@@ -10,6 +10,18 @@ body {
 
 .container { display: flex; flex-direction: column; align-items: center; }
 
+#slimeName {
+    border: none;
+    border-bottom: 2px solid #CDB4DB;
+    background: transparent;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    outline: none;
+    width: 200px;
+    margin-bottom: 20px;
+}
+
 .game-area {
     display: flex;
     align-items: center;
@@ -24,7 +36,6 @@ body {
     width: 320px;
     height: 320px;
     border: 3px solid #333;
-    image-rendering: pixelated;
 }
 
 .status-bars { display: flex; gap: 20px; height: 220px; }
@@ -38,14 +49,13 @@ body {
     position: relative;
     display: flex;
     flex-direction: column-reverse;
-    overflow: hidden; /* 게이지 넘침 방지 */
+    overflow: hidden;
 }
 
-.bar { width: 100%; transition: height 0.3s; }
+.bar { width: 100%; transition: height 0.3s ease-out; }
 .fullness { background: #FF9F1C; }
 .cleanliness { background: #2EC4B6; }
 
-/* 게이지 아래 아이콘 스타일 */
 .bar-label {
     position: absolute;
     bottom: -40px;
@@ -56,4 +66,5 @@ body {
 
 .ui-area { margin-top: 50px; text-align: center; }
 .button-group { display: flex; gap: 15px; }
-button { width: 60px; height: 60px; font-size: 30px; cursor: pointer; border-radius: 50%; border: 2px solid #333; background: white; }
+button { width: 60px; height: 60px; font-size: 30px; cursor: pointer; border-radius: 50%; border: 2px solid #333; background: white; transition: 0.1s; }
+button:active { transform: scale(0.9); }
