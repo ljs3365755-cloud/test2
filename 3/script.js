@@ -34,8 +34,10 @@ function drawSlime() {
         ctx.fillText("Zzz...", cx + 60, cy - 80 + Math.sin(now/400)*8);
     }
 
+    // 상호작용 강제 상태 적용
     if (state !== 1) currentDisplayState = state;
     
+    // 11. 배부름 좌우 흔들기
     let offsetX = 0;
     if (isFullState) {
         currentDisplayState = 2;
@@ -55,7 +57,7 @@ function drawSlime() {
         ctx.fillRect(cx-50+offsetX, cy-50, 100, 40); ctx.fillRect(cx-40+offsetX, cy-10, 80, 10);
     }
 
-    // --- [핵심 수정] 눈 그리기 (늘어남 모션 반영) ---
+    // --- 눈 그리기 (늘어남 모션 반영) ---
     let eyeY = (currentDisplayState === 3) ? cy - 75 : cy - 35; 
     ctx.strokeStyle = "black"; ctx.lineWidth = 4; ctx.lineCap = "round";
     
@@ -88,7 +90,9 @@ function drawSlime() {
     }
 
     if (effect) drawEffect(effect, cx, cy);
-}    // 상호작용 강제 상태 적용
+} 
+
+// 상호작용 강제 상태 적용
     if (state !== 1) currentDisplayState = state;
     
     // 11. 배부름 좌우 흔들기
