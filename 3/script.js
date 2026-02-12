@@ -47,15 +47,20 @@ function drawSlime() {
         ctx.fillRect(50, 120, 100, 10);
         
         ctx.fillStyle = "black";
-        // 왼쪽 눈 ( > )
-        ctx.fillRect(70, 136, 8, 2);
-        ctx.fillRect(70, 142, 8, 2);
-        ctx.fillRect(76, 138, 2, 4);
+
+        // 왼쪽 눈 ( > ) 픽셀 단위로 정교하게 그리기
+        ctx.fillRect(70, 136, 2, 2);
+        ctx.fillRect(72, 138, 2, 2);
+        ctx.fillRect(74, 140, 2, 2); // 정점
+        ctx.fillRect(72, 142, 2, 2);
+        ctx.fillRect(70, 144, 2, 2);
         
-        // 오른쪽 눈 ( < )
-        ctx.fillRect(122, 136, 8, 2); 
-        ctx.fillRect(122, 142, 8, 2);
-        ctx.fillRect(122, 138, 2, 4);
+        // 오른쪽 눈 ( < ) 픽셀 단위로 정교하게 그리기
+        ctx.fillRect(126, 136, 2, 2);
+        ctx.fillRect(124, 138, 2, 2);
+        ctx.fillRect(122, 140, 2, 2); // 정점
+        ctx.fillRect(124, 142, 2, 2);
+        ctx.fillRect(126, 144, 2, 2);
     }
 }
 
