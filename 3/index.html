@@ -12,7 +12,20 @@
             <input type="text" id="slimeName" placeholder="슬라임 이름 입력..." maxlength="10">
         </div>
         
-        <canvas id="slimeCanvas" width="200" height="200"></canvas>
+        <div class="game-area">
+            <canvas id="slimeCanvas" width="200" height="200"></canvas>
+            
+            <div class="status-bars">
+                <div class="bar-container" title="포만감">
+                    <div id="fullnessBar" class="bar fullness"></div>
+                    <span class="bar-label">😋</span>
+                </div>
+                <div class="bar-container" title="청결도">
+                    <div id="cleanBar" class="bar cleanliness"></div>
+                    <span class="bar-label">🧼</span>
+                </div>
+            </div>
+        </div>
         
         <div class="ui-area">
             <p id="statusMsg">슬라임을 돌봐주세요!</p>
@@ -20,6 +33,7 @@
                 <button id="feedBtn" title="삼각김밥">🍙</button>
                 <button id="waterBtn" title="물">💧</button>
                 <button id="cookieBtn" title="쿠키">🍪</button>
+                <button id="showerBtn" title="샤워">🚿</button>
             </div>
         </div>
     </div>
