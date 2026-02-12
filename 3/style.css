@@ -1,5 +1,5 @@
 body {
-    background-color: #f0f0f0;
+    background-color: #90ee90;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -37,7 +37,7 @@ canvas {
     border: none;
     background: transparent;
     margin-top: 10px;
-    visibility: hidden; /* 평소엔 안 보임 */
+    visibility: hidden;
 }
 
 .ui-area {
