@@ -8,14 +8,28 @@ const cookieBtn = document.getElementById('cookieBtn');
 let state = 1; // 1:평소, 2:눈감음, 3:늘어남, 4:눌림, 5:행복, 6:별눈
 let lastActionTime = Date.now();
 let isDragging = false;
-let effectType = null; // 'heart', 'water'
+let effectType = null; 
 let feedCount = 0;
 let isFull = false;
 let isShaking = false; 
 let shakeOffset = 0;
 
+// 눈 깜빡임 관련 변수
+let lastBlinkTime = Date.now();
+let isBlinking = false;
+
 function safePlay(filename) {
     try { new Audio(filename).play().catch(() => {}); } catch (e) {}
+}
+
+// [수정 2] 물방울 모양 그리기 함수
+function drawWaterDrop(x, y) {
+    ctx.fillStyle = "#3A86FF";
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.bezierCurveTo(x - 5, y + 5, x - 5, y + 12, x, y + 12);
+    ctx.bezierCurveTo(x + 5, y + 12, x + 5, y + 5, x, y);
+    ctx.fill();
 }
 
 function drawSlime() {
@@ -23,26 +37,25 @@ function drawSlime() {
     const now = Date.now();
     const idleTime = now - lastActionTime;
     
-    // 도리도리 계산
     shakeOffset = isShaking ? Math.sin(now / 50) * 15 : 0;
 
-    // 15초 이상 반응 없을 시 Zzz... 표시
-    if (idleTime > 15000 && !isDragging && !isFull) {
+    // [수정 3] 15초 -> 30초로 변경
+    if (idleTime > 30000 && !isDragging && !isFull) {
         ctx.fillStyle = "#555";
         ctx.font = "bold 16px Arial";
         ctx.fillText("Zzz...", 130 + shakeOffset, 60 + Math.sin(now / 300) * 5);
     }
 
-    // 아이템 효과 (하트 또는 물방울)
+    // [수정 1 & 2] 아이템 효과 로직
     if (effectType && !isFull) {
+        const yBounce = Math.sin(now / 150) * 8;
         if (effectType === 'heart') {
-            ctx.fillStyle = "#ff4d4d";
-            ctx.fillRect(95 + shakeOffset, 30 + Math.sin(now / 150) * 8, 10, 10);
+            ctx.fillStyle = "#ff4d4d"; // 하트 복구
+            ctx.fillRect(95 + shakeOffset, 30 + yBounce, 10, 10);
+            ctx.fillRect(85 + shakeOffset, 25 + yBounce, 10, 10);
+            ctx.fillRect(105 + shakeOffset, 25 + yBounce, 10, 10);
         } else if (effectType === 'water') {
-            ctx.fillStyle = "#3A86FF";
-            ctx.beginPath(); // 물방울 모양
-            ctx.arc(100 + shakeOffset, 35 + Math.sin(now / 150) * 10, 6, 0, Math.PI * 2);
-            ctx.fill();
+            drawWaterDrop(100 + shakeOffset, 25 + yBounce);
         }
     }
 
@@ -62,13 +75,15 @@ function drawSlime() {
         ctx.fillRect(140 + shakeOffset, 110, 10, 30);
     }
 
-    // 눈 그리기
+    // [수정 4] 눈 그리기 로직 (눈 깜빡임 포함)
     ctx.fillStyle = "black";
-    if (isFull || (state === 2 && !isDragging)) { // 눈 감음
+    
+    // 강제 눈감기 상태(isFull, 졸음)가 아니고, 0.5초 눈 깜빡임 타이밍일 때
+    if (isFull || (state === 2 && !isDragging) || isBlinking) {
         ctx.fillRect(80 + shakeOffset, 112, 10, 2); 
         ctx.fillRect(110 + shakeOffset, 112, 10, 2);
-    } else if (state === 6) { // 별 모양 눈 (쿠키)
-        ctx.fillStyle = "#FFD700"; // 금색 별
+    } else if (state === 6) { // 별 눈
+        ctx.fillStyle = "#FFD700";
         drawStar(85 + shakeOffset, 110, 5, 8, 4);
         drawStar(115 + shakeOffset, 110, 5, 8, 4);
     } else if (state === 4) { // > <
@@ -81,19 +96,20 @@ function drawSlime() {
     }
 }
 
+// 별 그리기 함수
 function drawStar(cx, cy, spikes, outerRadius, innerRadius) {
-    let rot = Math.PI / 2 * 3; let x = cx; let y = cy; let step = Math.PI / spikes;
+    let rot = Math.PI / 2 * 3; let step = Math.PI / spikes;
     ctx.beginPath(); ctx.moveTo(cx, cy - outerRadius);
     for (let i = 0; i < spikes; i++) {
-        x = cx + Math.cos(rot) * outerRadius; y = cy + Math.sin(rot) * outerRadius;
+        let x = cx + Math.cos(rot) * outerRadius; let y = cy + Math.sin(rot) * outerRadius;
         ctx.lineTo(x, y); rot += step;
         x = cx + Math.cos(rot) * innerRadius; y = cy + Math.sin(rot) * innerRadius;
         ctx.lineTo(x, y); rot += step;
     }
-    ctx.lineTo(cx, cy - outerRadius); ctx.closePath(); ctx.fill();
+    ctx.closePath(); ctx.fill();
 }
 
-// 공통 반응 함수
+// 공통 반응
 function triggerReaction(newState, newEffect, sound) {
     if (isFull) { alert("슬라임이 아직 배가 부릅니다!"); return; }
     state = newState; effectType = newEffect; lastActionTime = Date.now();
@@ -101,7 +117,6 @@ function triggerReaction(newState, newEffect, sound) {
     setTimeout(() => { if(!isFull) { state = 1; effectType = null; } }, 2000);
 }
 
-// 아이콘 클릭 이벤트
 feedBtn.addEventListener('click', () => {
     feedCount++;
     if (feedCount >= 5) {
@@ -115,7 +130,6 @@ feedBtn.addEventListener('click', () => {
 waterBtn.addEventListener('click', () => triggerReaction(5, 'water', 'ggd-yumyum.mp3'));
 cookieBtn.addEventListener('click', () => triggerReaction(6, 'heart', 'ggd-yumyum.mp3'));
 
-// 상호작용 로직
 canvas.addEventListener('mousedown', () => { if(!isFull){ isDragging = true; state = 4; lastActionTime = Date.now(); safePlay('squeaky.mp3'); }});
 window.addEventListener('mousemove', (e) => { 
     if (isDragging) {
@@ -126,10 +140,22 @@ window.addEventListener('mousemove', (e) => {
 window.addEventListener('mouseup', () => { isDragging = false; if(!isFull) state = 1; });
 
 function animate() {
-    // 눈 감기 오류 수정: 3초 후 눈 감고, 움직임 발생 시 즉시 해제
-    if (!isDragging && !isFull && ![5,6].includes(state)) {
-        state = (Date.now() - lastActionTime > 3000) ? 2 : 1;
+    const now = Date.now();
+    
+    // [수정 4] 5초 눈뜨고 0.5초 깜빡이는 로직
+    if (!isDragging && !isFull && ![5, 6].includes(state)) {
+        const cycle = now % 5500; // 5.5초 주기
+        if (cycle > 5000) { // 마지막 0.5초 동안
+            isBlinking = true;
+        } else {
+            isBlinking = false;
+            // 3초 이상 입력 없으면 눈 감는 기존 로직과 병합
+            state = (now - lastActionTime > 3000) ? 2 : 1;
+        }
+    } else {
+        isBlinking = false;
     }
+
     drawSlime();
     requestAnimationFrame(animate);
 }
