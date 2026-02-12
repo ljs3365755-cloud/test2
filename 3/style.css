@@ -5,34 +5,15 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    font-family: 'Apple SD Gothic Neo', sans-serif;
-    overflow-x: hidden;
+    font-family: sans-serif;
 }
 
-.container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-}
-
-.name-tag { margin-bottom: 20px; }
-#slimeName {
-    border: none;
-    border-bottom: 2px solid #CDB4DB;
-    background: transparent;
-    text-align: center;
-    font-size: 22px;
-    font-weight: bold;
-    outline: none;
-    width: 200px;
-}
+.container { display: flex; flex-direction: column; align-items: center; }
 
 .game-area {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 25px;
+    gap: 30px;
     background: white;
     padding: 30px;
     border-radius: 20px;
@@ -46,11 +27,7 @@ body {
     image-rendering: pixelated;
 }
 
-.status-bars {
-    display: flex;
-    gap: 20px;
-    height: 220px;
-}
+.status-bars { display: flex; gap: 20px; height: 220px; }
 
 .bar-container {
     width: 24px;
@@ -61,20 +38,14 @@ body {
     position: relative;
     display: flex;
     flex-direction: column-reverse;
-    /* 게이지가 풀일 때 튀어나가지 않도록 수정 */
-    overflow: hidden; 
+    overflow: hidden; /* 게이지 넘침 방지 */
 }
 
-.bar { 
-    width: 100%; 
-    transition: height 0.3s ease-out; 
-    /* 내부 바의 곡률은 컨테이너가 overflow:hidden이므로 0으로 설정해도 무방 */
-    border-radius: 0; 
-}
-
+.bar { width: 100%; transition: height 0.3s; }
 .fullness { background: #FF9F1C; }
 .cleanliness { background: #2EC4B6; }
 
+/* 게이지 아래 아이콘 스타일 */
 .bar-label {
     position: absolute;
     bottom: -40px;
@@ -84,19 +55,5 @@ body {
 }
 
 .ui-area { margin-top: 50px; text-align: center; }
-#statusMsg { font-weight: bold; font-size: 18px; margin-bottom: 20px; color: #444; }
-
-.button-group {
-    display: grid;
-    grid-template-columns: repeat(2, 80px);
-    gap: 20px;
-    justify-content: center;
-}
-
-button {
-    width: 80px; height: 80px; font-size: 35px;
-    background: white; border: 2px solid #333; border-radius: 50%;
-    cursor: pointer; transition: 0.1s; display: flex; align-items: center; justify-content: center;
-}
-button:hover { background: #f9f9f9; }
-button:active { transform: scale(0.9); }
+.button-group { display: flex; gap: 15px; }
+button { width: 60px; height: 60px; font-size: 30px; cursor: pointer; border-radius: 50%; border: 2px solid #333; background: white; }
