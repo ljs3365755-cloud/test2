@@ -163,23 +163,43 @@ function updateBars() {
     if(cb) cb.style.height = cleanliness + "%";
 }
 
-// 2, 3. 드래그 및 클릭 이벤트
-canvas.onmousedown = () => { 
+// 2, 3. 드래그 및 클릭 이벤트 (늘어나는 모션 + 사운드 통합)
+canvas.onmousedown = (e) => { 
     isDragging = true; 
-    state = 4; 
+    state = 4; // 클릭 눈 (> <)
     lastActionTime = Date.now();
     
-    // [추가] 슬라임 누를 때 소리
+    // 찍(squeaky) 소리 재생
     const snd = document.getElementById('soundSelect');
     if(snd) { snd.currentTime = 0; snd.play(); } 
 };
-window.onmouseup = () => { isDragging = false; state = 1; };
 
-// 버튼 연결
+window.onmousemove = (e) => {
+    if (!isDragging) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const mouseY = e.clientY - rect.top;
+
+    // 마우스가 위로 올라가면 이미지 3번(늘어남) 상태로 변경
+    if (mouseY < 100) {
+        state = 3; 
+    } else {
+        state = 4;
+    }
+};
+
+window.onmouseup = () => { 
+    isDragging = false; 
+    state = 1; // 기본 상태로 복귀
+};
+
+// 버튼 연결 (상호작용 함수 연결)
 document.getElementById('feedBtn').onclick = () => trigger('feed', 1, 0);
 document.getElementById('waterBtn').onclick = () => trigger('water', 1, 0);
 document.getElementById('cookieBtn').onclick = () => trigger('cookie', 2, 0);
 document.getElementById('showerBtn').onclick = () => trigger('bubbles', 0, 10);
 
+// 애니메이션 실행 루프
 function animate() { drawSlime(); requestAnimationFrame(animate); }
-animate(); updateBars();
+animate(); 
+updateBars(); // 초기 게이지 설정
