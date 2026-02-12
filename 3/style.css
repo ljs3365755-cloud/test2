@@ -27,3 +27,9 @@ p {
     margin-top: 20px;
     color: #555;
 }
+
+canvas {
+    touch-action: none; /* 브라우저 기본 터치 동작(스크롤 등) 방지 */
+    -webkit-user-select: none; /* iOS 텍스트 선택 방지 */
+    user-select: none;
+}
