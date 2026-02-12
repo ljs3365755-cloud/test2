@@ -19,7 +19,7 @@ function getBlinkState() {
     return (now % 5500 > 5000) ? 2 : 1;
 }
 
-// 픽셀 이미지 드로잉 (이미지 1~4번 좌표 완벽 구현)
+// 픽셀 이미지 드로잉 (이미지 1~4번 좌표 및 늘어나는 눈 모션 완벽 구현)
 function drawSlime() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const cx = canvas.width / 2, cy = canvas.height / 2 + 40;
@@ -34,7 +34,61 @@ function drawSlime() {
         ctx.fillText("Zzz...", cx + 60, cy - 80 + Math.sin(now/400)*8);
     }
 
-    // 상호작용 강제 상태 적용
+    if (state !== 1) currentDisplayState = state;
+    
+    let offsetX = 0;
+    if (isFullState) {
+        currentDisplayState = 2;
+        offsetX = Math.sin(now / 100) * 5;
+    }
+
+    ctx.fillStyle = SLIME_COLOR;
+
+    // --- 몸체 드로잉 (이미지 1~4번 픽셀 구조) ---
+    if (currentDisplayState === 3) { // 3번 늘어남
+        ctx.fillRect(cx-10+offsetX, cy-110, 20, 10); ctx.fillRect(cx-20+offsetX, cy-100, 40, 10);
+        ctx.fillRect(cx-30+offsetX, cy-90, 60, 100); ctx.fillRect(cx-20+offsetX, cy+10, 40, 10);
+    } else if (currentDisplayState === 4) { // 4번 클릭
+        ctx.fillRect(cx-45+offsetX, cy-50, 90, 40); ctx.fillRect(cx-55+offsetX, cy-40, 110, 20);
+    } else { // 1, 2번 기본
+        ctx.fillRect(cx-30+offsetX, cy-70, 60, 10); ctx.fillRect(cx-40+offsetX, cy-60, 80, 10);
+        ctx.fillRect(cx-50+offsetX, cy-50, 100, 40); ctx.fillRect(cx-40+offsetX, cy-10, 80, 10);
+    }
+
+    // --- [핵심 수정] 눈 그리기 (늘어남 모션 반영) ---
+    let eyeY = (currentDisplayState === 3) ? cy - 75 : cy - 35; 
+    ctx.strokeStyle = "black"; ctx.lineWidth = 4; ctx.lineCap = "round";
+    
+    if (currentDisplayState === 3) { 
+        // 3번 이미지: 세로로 주욱 늘어난 눈
+        ctx.fillStyle = "black";
+        ctx.fillRect(cx - 20 + offsetX, eyeY, 8, 30); 
+        ctx.fillRect(cx + 12 + offsetX, eyeY, 8, 30);
+    } else if (currentDisplayState === 1) { 
+        // 1번 이미지: 기본 점눈
+        ctx.fillStyle = "black";
+        ctx.fillRect(cx - 20 + offsetX, eyeY - 4, 8, 8); 
+        ctx.fillRect(cx + 12 + offsetX, eyeY - 4, 8, 8);
+    } else if (currentDisplayState === 2) { 
+        // 2번 이미지: 감은 눈
+        ctx.beginPath(); ctx.moveTo(cx-22+offsetX, eyeY); ctx.lineTo(cx-10+offsetX, eyeY);
+        ctx.moveTo(cx+10+offsetX, eyeY); ctx.lineTo(cx+22+offsetX, eyeY); ctx.stroke();
+    } else if (currentDisplayState === 4) { 
+        // 4번 이미지: > < 눈
+        ctx.beginPath();
+        ctx.moveTo(cx-25+offsetX, eyeY-5); ctx.lineTo(cx-15+offsetX, eyeY); ctx.lineTo(cx-25+offsetX, eyeY+5);
+        ctx.moveTo(cx+25+offsetX, eyeY-5); ctx.lineTo(cx+15+offsetX, eyeY); ctx.lineTo(cx+25+offsetX, eyeY+5);
+        ctx.stroke();
+    } else if (currentDisplayState === 5) { 
+        // 상호작용: ^^ 눈
+        ctx.beginPath();
+        ctx.moveTo(cx-25+offsetX, eyeY+3); ctx.lineTo(cx-18+offsetX, eyeY-4); ctx.lineTo(cx-11+offsetX, eyeY+3);
+        ctx.moveTo(cx+11+offsetX, eyeY+3); ctx.lineTo(cx+18+offsetX, eyeY-4); ctx.lineTo(cx+25+offsetX, eyeY+3);
+        ctx.stroke();
+    }
+
+    if (effect) drawEffect(effect, cx, cy);
+}    // 상호작용 강제 상태 적용
     if (state !== 1) currentDisplayState = state;
     
     // 11. 배부름 좌우 흔들기
