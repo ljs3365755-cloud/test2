@@ -137,7 +137,6 @@ function drawSlime() {
     }
 
     if (effect) drawEffect(effect, cx, cy);
-}
 
 // 6~9. 특수 효과 구현
 function drawEffect(type, cx, cy) {
