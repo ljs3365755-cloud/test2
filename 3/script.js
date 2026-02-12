@@ -1,5 +1,21 @@
 const canvas = document.getElementById('slimeCanvas');
 const ctx = canvas.getContext('2d');
+function resizeCanvas() {
+    const ratio = window.devicePixelRatio || 1;
+    const size = window.innerWidth < 768 ? window.innerWidth * 0.8 : 250;
+    
+    // 스타일 크기 설정
+    canvas.style.width = size + "px";
+    canvas.style.height = size + "px";
+    
+    // 실제 드로잉 해상도 설정 (픽셀 깨짐 방지)
+    canvas.width = size * ratio;
+    canvas.height = size * ratio;
+    ctx.scale(ratio, ratio);
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas(); // 초기 실행
 const SLIME_COLOR = "#CDB4DB";
 
 let state = 1; // 1:기본, 2:눈감음, 3:늘어남, 4:클릭(><), 5:상호작용(^^)

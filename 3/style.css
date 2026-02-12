@@ -131,3 +131,39 @@ button:disabled {
     opacity: 0.5; 
     cursor: not-allowed; 
 }
+@media screen and (max-width: 768px) {
+    .game-card {
+        flex-direction: column; /* 세로로 배치 */
+        padding: 20px;
+        width: 90%;
+    }
+
+    #slimeCanvas {
+        width: 80vw;  /* 화면 너비의 80%로 캔버스 확대 */
+        height: 80vw;
+    }
+
+    .status-side {
+        flex-direction: row; /* 게이지 바를 가로로 배치 */
+        justify-content: center;
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    .bar-outer {
+        width: 60px;  /* 모바일에서 게이지 바를 더 두껍게 */
+        height: 150px;
+    }
+
+    .button-row {
+        gap: 10px;
+        flex-wrap: wrap; /* 버튼이 넘치면 다음 줄로 */
+        justify-content: center;
+    }
+
+    button {
+        width: 80px;  /* 터치하기 편하게 버튼 크기 확대 */
+        height: 80px;
+        font-size: 40px;
+    }
+}
