@@ -13,15 +13,12 @@ let feedCount = 0;
 let isFull = false;
 let isShaking = false; 
 let shakeOffset = 0;
-
-// 눈 깜빡임 관련
 let isBlinking = false;
 
 function safePlay(filename) {
     try { new Audio(filename).play().catch(() => {}); } catch (e) {}
 }
 
-// [수정 3] 다듬어진 하트 모양 그리기
 function drawHeart(x, y, size) {
     ctx.fillStyle = "#ff4d4d";
     ctx.beginPath();
@@ -61,17 +58,14 @@ function drawSlime() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const now = Date.now();
     const idleTime = now - lastActionTime;
-    
     shakeOffset = isShaking ? Math.sin(now / 50) * 15 : 0;
 
-    // 30초 이상 반응 없을 시 Zzz...
     if (idleTime > 30000 && !isDragging && !isFull) {
         ctx.fillStyle = "#555";
         ctx.font = "bold 18px Arial";
         ctx.fillText("Zzz...", 135 + shakeOffset, 55 + Math.sin(now / 300) * 5);
     }
 
-    // 아이템 효과 (크기 및 모양 개선)
     if (effectType && !isFull) {
         const yBounce = Math.sin(now / 150) * 10;
         if (effectType === 'heart') drawHeart(100 + shakeOffset, 25 + yBounce, 15);
@@ -79,7 +73,6 @@ function drawSlime() {
         else if (effectType === 'star') drawEffectStar(100 + shakeOffset, 35 + yBounce, 5, 18, 9);
     }
 
-    // 몸체 그리기
     ctx.fillStyle = SLIME_COLOR;
     if (state === 3) {
         ctx.fillRect(80 + shakeOffset, 50, 40, 110);
@@ -95,42 +88,37 @@ function drawSlime() {
         ctx.fillRect(140 + shakeOffset, 110, 10, 30);
     }
 
-    // 눈 그리기 로직
-    ctx.lineWidth = 3;
-    ctx.lineCap = "round";
+    // [수정 1] 눈 그리기 (크기 최적화)
     ctx.strokeStyle = "black";
+    ctx.lineCap = "round";
 
     if (isFull || (idleTime > 30000 && !isDragging) || isBlinking) {
-        // 일직선 눈 (자는 상태, 배부른 상태, 깜빡임)
+        // 감은 눈: 일반 눈 크기(6px)와 맞추기 위해 가로 길이를 8px로 제한하고 두께를 2.5로 조정
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.moveTo(78 + shakeOffset, 112); ctx.lineTo(92 + shakeOffset, 112);
-        ctx.moveTo(108 + shakeOffset, 112); ctx.lineTo(122 + shakeOffset, 112);
+        ctx.moveTo(81 + shakeOffset, 112); ctx.lineTo(89 + shakeOffset, 112);
+        ctx.moveTo(111 + shakeOffset, 112); ctx.lineTo(119 + shakeOffset, 112);
         ctx.stroke();
-    } else if (state === 5) { 
-        // [수정 2] 완벽한 ^^ 눈 모양
+    } else if (state === 5) { // ^^ 눈
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        // 왼쪽 ^
-        ctx.moveTo(75 + shakeOffset, 115);
-        ctx.lineTo(82 + shakeOffset, 108);
-        ctx.lineTo(89 + shakeOffset, 115);
-        // 오른쪽 ^
-        ctx.moveTo(111 + shakeOffset, 115);
-        ctx.lineTo(118 + shakeOffset, 108);
-        ctx.lineTo(125 + shakeOffset, 115);
+        ctx.moveTo(78 + shakeOffset, 115); ctx.lineTo(85 + shakeOffset, 108); ctx.lineTo(92 + shakeOffset, 115);
+        ctx.moveTo(108 + shakeOffset, 115); ctx.lineTo(115 + shakeOffset, 108); ctx.lineTo(122 + shakeOffset, 115);
         ctx.stroke();
     } else if (state === 4) { // > <
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.moveTo(72+shakeOffset, 136); ctx.lineTo(80+shakeOffset, 140); ctx.lineTo(72+shakeOffset, 144);
-        ctx.moveTo(128+shakeOffset, 136); ctx.lineTo(120+shakeOffset, 140); ctx.lineTo(128+shakeOffset, 144);
+        ctx.moveTo(74+shakeOffset, 136); ctx.lineTo(80+shakeOffset, 140); ctx.lineTo(74+shakeOffset, 144);
+        ctx.moveTo(126+shakeOffset, 136); ctx.lineTo(120+shakeOffset, 140); ctx.lineTo(126+shakeOffset, 144);
         ctx.stroke();
-    } else { // 기본 눈 (● ●)
+    } else { // 기본 눈 (● ●) 6x6 픽셀
         ctx.fillStyle = "black";
         let eyeY = (state === 3) ? 80 : 110;
-        ctx.fillRect(82+shakeOffset, eyeY, 6, 6); ctx.fillRect(112+shakeOffset, eyeY, 6, 6);
+        ctx.fillRect(82+shakeOffset, eyeY, 6, 6); 
+        ctx.fillRect(112+shakeOffset, eyeY, 6, 6);
     }
 }
 
-// 공통 반응
 function triggerReaction(newState, newEffect, sound) {
     if (isFull) { alert("슬라임이 아직 배가 부릅니다!"); return; }
     state = newState; effectType = newEffect; lastActionTime = Date.now();
@@ -154,18 +142,15 @@ cookieBtn.addEventListener('click', () => triggerReaction(5, 'star', 'ggd-yumyum
 canvas.addEventListener('mousedown', () => { if(!isFull){ isDragging = true; state = 4; lastActionTime = Date.now(); safePlay('squeaky.mp3'); }});
 window.addEventListener('mouseup', () => { isDragging = false; if(!isFull) state = 1; });
 
-// [수정 1] 눈 깜빡임 로직 (30초 전까지 무한 반복)
 function animate() {
     const now = Date.now();
     const idleTime = now - lastActionTime;
-
     if (!isDragging && !isFull && state === 1 && idleTime < 30000) {
-        const blinkCycle = now % 5500; // 5.5초마다 반복
+        const blinkCycle = now % 5500;
         isBlinking = (blinkCycle > 5000); 
     } else {
         isBlinking = false;
     }
-
     drawSlime();
     requestAnimationFrame(animate);
 }
