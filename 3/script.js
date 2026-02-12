@@ -4,30 +4,30 @@ const foodCanvas = document.getElementById('foodCanvas');
 const foodCtx = foodCanvas.getContext('2d');
 const feedBtn = document.getElementById('feedBtn');
 
-let state = 1; // 1:평소, 2:눈감음, 3:늘어남, 4:눌림, 5:행복(^^)
+let state = 1; 
 let lastActionTime = Date.now();
 let isDragging = false;
 let showHeart = false;
 
+// 연속 급여 및 거절 관련 변수
+let feedCount = 0;
+let isFull = false;
+let shakeOffset = 0;
+
 // 오디오 파일 설정
 const squeakSound = new Audio('squeaky.mp3');
-const yumSound = new Audio('ggd-yumyum.mp3'); // 냠냠 소리 추가
+const yumSound = new Audio('ggd-yumyum.mp3');
+const noSound = new Audio('no.mp3'); // 거절 사운드 추가
 
-// 삼각김밥 도트 그리기
 function drawFood() {
     foodCtx.clearRect(0, 0, foodCanvas.width, foodCanvas.height);
-    
-    // 밥 (흰색 삼각형)
     foodCtx.fillStyle = "white";
     foodCtx.fillRect(20, 15, 10, 5);
     foodCtx.fillRect(15, 20, 20, 5);
     foodCtx.fillRect(10, 25, 30, 5);
     foodCtx.fillRect(5, 30, 40, 10);
-    
-    // 김 (검은색 중앙)
     foodCtx.fillStyle = "black";
     foodCtx.fillRect(20, 32, 10, 8);
-    
     foodCtx.strokeStyle = "#ccc";
     foodCtx.strokeRect(5, 30, 40, 10);
 }
@@ -35,53 +35,60 @@ function drawFood() {
 function drawSlime() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // 1. 하트 애니메이션
-    if (showHeart) {
+    // 도리도리 애니메이션 계산
+    if (isFull) {
+        shakeOffset = Math.sin(Date.now() / 50) * 15; 
+    } else {
+        shakeOffset = 0;
+    }
+
+    if (showHeart && !isFull) {
         ctx.fillStyle = "#ff4d4d";
         const yOffset = Math.sin(Date.now() / 150) * 8;
-        ctx.fillRect(95, 30 + yOffset, 10, 10);
-        ctx.fillRect(85, 25 + yOffset, 10, 10);
-        ctx.fillRect(105, 25 + yOffset, 10, 10);
+        ctx.fillRect(95 + shakeOffset, 30 + yOffset, 10, 10);
+        ctx.fillRect(85 + shakeOffset, 25 + yOffset, 10, 10);
+        ctx.fillRect(105 + shakeOffset, 25 + yOffset, 10, 10);
     }
 
     ctx.fillStyle = "#ced4da"; 
     
-    // 2. 슬라임 몸통
-    if (state === 3) {
-        ctx.fillRect(80, 50, 40, 110);
-        ctx.fillRect(70, 70, 10, 70);
-        ctx.fillRect(120, 70, 10, 70);
-    } else if (state === 4) {
-        ctx.fillRect(40, 130, 120, 30);
-        ctx.fillRect(50, 120, 100, 10);
-    } else {
-        ctx.fillRect(60, 100, 80, 50);
-        ctx.fillRect(70, 90, 60, 10);
-        ctx.fillRect(50, 110, 10, 30);
-        ctx.fillRect(140, 110, 10, 30);
+    if (state === 3) { // 늘어남
+        ctx.fillRect(80 + shakeOffset, 50, 40, 110);
+        ctx.fillRect(70 + shakeOffset, 70, 10, 70);
+        ctx.fillRect(120 + shakeOffset, 70, 10, 70);
+    } else if (state === 4 && !isFull) { // 눌림
+        ctx.fillRect(40 + shakeOffset, 130, 120, 30);
+        ctx.fillRect(50 + shakeOffset, 120, 100, 10);
+    } else { // 기본 체형
+        ctx.fillRect(60 + shakeOffset, 100, 80, 50);
+        ctx.fillRect(70 + shakeOffset, 90, 60, 10);
+        ctx.fillRect(50 + shakeOffset, 110, 10, 30);
+        ctx.fillRect(140 + shakeOffset, 110, 10, 30);
     }
 
-    // 3. 표정
     ctx.fillStyle = "black";
-    if (state === 1) {
-        ctx.fillRect(82, 110, 6, 6); ctx.fillRect(112, 110, 6, 6);
-    } else if (state === 2) {
-        ctx.fillRect(80, 112, 10, 2); ctx.fillRect(110, 112, 10, 2);
-    } else if (state === 3) {
-        ctx.fillRect(86, 80, 4, 12); ctx.fillRect(110, 80, 4, 12);
-    } else if (state === 4) {
-        ctx.fillRect(70, 136, 2, 2); ctx.fillRect(72, 138, 2, 2); ctx.fillRect(74, 140, 2, 2);
-        ctx.fillRect(72, 142, 2, 2); ctx.fillRect(70, 144, 2, 2);
-        ctx.fillRect(126, 136, 2, 2); ctx.fillRect(124, 138, 2, 2); ctx.fillRect(122, 140, 2, 2);
-        ctx.fillRect(124, 142, 2, 2); ctx.fillRect(126, 144, 2, 2);
-    } else if (state === 5) {
-        ctx.fillRect(75, 112, 2, 2); ctx.fillRect(77, 110, 4, 2); ctx.fillRect(81, 112, 2, 2);
-        ctx.fillRect(115, 112, 2, 2); ctx.fillRect(117, 110, 4, 2); ctx.fillRect(121, 112, 2, 2);
+    if (isFull || state === 2) { // 거절 중이거나 눈 감음 (ㅡ ㅡ)
+        ctx.fillRect(80 + shakeOffset, 112, 10, 2); 
+        ctx.fillRect(110 + shakeOffset, 112, 10, 2);
+    } else if (state === 1) { // 평소
+        ctx.fillRect(82 + shakeOffset, 110, 6, 6); 
+        ctx.fillRect(112 + shakeOffset, 110, 6, 6);
+    } else if (state === 3) { // 늘어남 눈
+        ctx.fillRect(86 + shakeOffset, 80, 4, 12); 
+        ctx.fillRect(110 + shakeOffset, 80, 4, 12);
+    } else if (state === 4) { // > < 눈
+        ctx.fillRect(70 + shakeOffset, 136, 2, 2); ctx.fillRect(72 + shakeOffset, 138, 2, 2); ctx.fillRect(74 + shakeOffset, 140, 2, 2);
+        ctx.fillRect(72 + shakeOffset, 142, 2, 2); ctx.fillRect(70 + shakeOffset, 144, 2, 2);
+        ctx.fillRect(126 + shakeOffset, 136, 2, 2); ctx.fillRect(124 + shakeOffset, 138, 2, 2); ctx.fillRect(122 + shakeOffset, 140, 2, 2);
+        ctx.fillRect(124 + shakeOffset, 142, 2, 2); ctx.fillRect(126 + shakeOffset, 144, 2, 2);
+    } else if (state === 5) { // ^^ 눈
+        ctx.fillRect(75 + shakeOffset, 112, 2, 2); ctx.fillRect(77 + shakeOffset, 110, 4, 2); ctx.fillRect(81 + shakeOffset, 112, 2, 2);
+        ctx.fillRect(115 + shakeOffset, 112, 2, 2); ctx.fillRect(117 + shakeOffset, 110, 4, 2); ctx.fillRect(121 + shakeOffset, 112, 2, 2);
     }
 }
 
-// 상호작용 함수들
 function handleStart(e) {
+    if(isFull) return;
     isDragging = true;
     state = 4;
     lastActionTime = Date.now();
@@ -99,11 +106,10 @@ function handleMove(e) {
 
 function handleEnd() {
     isDragging = false;
-    state = 1;
+    if(!isFull) state = 1;
     lastActionTime = Date.now();
 }
 
-// 이벤트 리스너 등록
 canvas.addEventListener('mousedown', handleStart);
 canvas.addEventListener('touchstart', (e) => { handleStart(); e.preventDefault(); }, {passive: false});
 window.addEventListener('mousemove', handleMove);
@@ -111,29 +117,51 @@ window.addEventListener('touchmove', (e) => { handleMove(e); e.preventDefault();
 window.addEventListener('mouseup', handleEnd);
 window.addEventListener('touchend', handleEnd);
 
-// 음식 주기 버튼 (사운드 추가됨)
+// 음식 주기 버튼 (거절 사운드 로직 반영)
 feedBtn.addEventListener('click', () => {
-    state = 5;
-    showHeart = true;
-    foodCanvas.style.visibility = 'visible';
-    
-    // 냠냠 소리 재생
-    yumSound.currentTime = 0;
-    yumSound.play().catch(e => console.log("재생 오류:", e));
-    
-    drawFood();
-    
-    setTimeout(() => {
-        state = 1;
+    if (isFull) return;
+
+    feedCount++;
+
+    if (feedCount >= 5) {
+        // 거절 시작
+        isFull = true;
         showHeart = false;
         foodCanvas.style.visibility = 'hidden';
-        lastActionTime = Date.now();
-    }, 2000);
+        
+        // 거절 사운드 재생
+        noSound.currentTime = 0;
+        noSound.play().catch(() => {});
+        
+        setTimeout(() => {
+            isFull = false;
+            feedCount = 0;
+            state = 1;
+            lastActionTime = Date.now();
+        }, 3000);
+    } else {
+        // 냠냠 모션
+        state = 5;
+        showHeart = true;
+        foodCanvas.style.visibility = 'visible';
+        yumSound.currentTime = 0;
+        yumSound.play().catch(() => {});
+        drawFood();
+        
+        setTimeout(() => {
+            if (!isFull) {
+                state = 1;
+                showHeart = false;
+                foodCanvas.style.visibility = 'hidden';
+                lastActionTime = Date.now();
+            }
+        }, 2000);
+    }
 });
 
 function animate() {
     const now = Date.now();
-    if (!isDragging && state !== 4 && state !== 5) {
+    if (!isDragging && state !== 4 && state !== 5 && !isFull) {
         const diff = now - lastActionTime;
         if (diff > 3000) {
             state = 2;
