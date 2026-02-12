@@ -11,28 +11,29 @@
             <input type="text" id="slimeName" placeholder="슬라임 이름 입력..." maxlength="10">
         </div>
         
-        <div class="game-area">
-            <canvas id="slimeCanvas" width="200" height="200"></canvas>
-            <div class="status-bars">
+        <div class="game-card">
+            <div class="canvas-container">
+                <canvas id="slimeCanvas" width="300" height="300"></canvas>
+            </div>
+            <div class="status-side">
                 <div class="status-item">
-                    <div class="bar-container"><div id="fullnessBar" class="bar fullness"></div></div>
-                    <div class="label-icon">🍙</div>
+                    <div class="bar-outer"><div id="fullBar" class="bar-inner full"></div></div>
+                    <div class="icon">🍙</div>
                 </div>
                 <div class="status-item">
-                    <div class="bar-container"><div id="cleanBar" class="bar cleanliness"></div></div>
-                    <div class="label-icon">🚿</div>
+                    <div class="bar-outer"><div id="cleanBar" class="bar-inner clean"></div></div>
+                    <div class="icon">🚿</div>
                 </div>
             </div>
         </div>
-        
-        <div class="ui-area">
-            <p id="statusMsg">슬라임을 클릭하거나 버튼을 눌러보세요!</p>
-            <div class="button-group">
-                <button id="feedBtn">🍙</button>
-                <button id="waterBtn">💧</button>
-                <button id="cookieBtn">🍪</button>
-                <button id="showerBtn">🚿</button>
-            </div>
+
+        <p id="statusMsg">슬라임을 클릭하거나 버튼을 눌러보세요!</p>
+
+        <div class="button-row">
+            <button id="feedBtn" title="삼각김밥">🍙</button>
+            <button id="waterBtn" title="물">💧</button>
+            <button id="cookieBtn" title="쿠키">🍪</button>
+            <button id="showerBtn" title="샤워">🚿</button>
         </div>
     </div>
     <script src="script.js"></script>

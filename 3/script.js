@@ -1,129 +1,152 @@
-const SLIME_COLOR = "#CDB4DB"; 
 const canvas = document.getElementById('slimeCanvas');
 const ctx = canvas.getContext('2d');
+const SLIME_COLOR = "#CDB4DB";
 
-let state = 1; // 1: 평소, 3: 늘어남, 4: 상호작용(모양 유지, 눈 ^^)
-let effectType = null;
+let state = 1; // 1:기본, 2:눈감음, 3:늘어남, 4:클릭(><), 5:상호작용(^^)
 let fullness = 50; 
 let cleanliness = 50;
+let effect = null;
 let lastActionTime = Date.now();
 let isDragging = false;
+let feedCount = 0;
+let lastCookieTime = 0;
+let isFullState = false;
 
-// 지정된 효과 그리기 (하트, 물방울, 별, 거품)
-function drawEffect(type) {
+// 1. 눈 감기 모션 (5초 뜨고 0.5초 감기)
+function getBlinkState() {
+    if (state !== 1) return state;
     const now = Date.now();
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-    const bounce = Math.sin(now / 150) * 10;
-
-    ctx.save();
-    if (type === 'heart') {
-        ctx.fillStyle = "#ff4d4d";
-        const x = cx, y = cy - 75 + bounce;
-        ctx.beginPath(); ctx.moveTo(x, y+5);
-        ctx.quadraticCurveTo(x, y-10, x-15, y-10); ctx.quadraticCurveTo(x-30, y-10, x-30, y+5);
-        ctx.quadraticCurveTo(x-30, y+20, x, y+35); ctx.quadraticCurveTo(x+30, y+20, x+30, y+5);
-        ctx.quadraticCurveTo(x+30, y-10, x+15, y-10); ctx.quadraticCurveTo(x, y-10, x, y+5); ctx.fill();
-    } else if (type === 'water') {
-        ctx.fillStyle = "#3A86FF";
-        ctx.beginPath(); ctx.arc(cx, cy - 75 + bounce, 12, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(cx - 12, cy - 75 + bounce); ctx.lineTo(cx, cy - 100 + bounce); ctx.lineTo(cx + 12, cy - 75 + bounce); ctx.fill();
-    } else if (type === 'star') {
-        ctx.fillStyle = "#FFD700";
-        const x = cx, y = cy - 85 + bounce;
-        let rot = Math.PI / 2 * 3; ctx.beginPath();
-        for (let i = 0; i < 5; i++) {
-            ctx.lineTo(x + Math.cos(rot) * 18, y + Math.sin(rot) * 18); rot += Math.PI / 5;
-            ctx.lineTo(x + Math.cos(rot) * 9, y + Math.sin(rot) * 9); rot += Math.PI / 5;
-        } ctx.closePath(); ctx.fill();
-    } else if (type === 'bubbles') {
-        for (let i = 0; i < 6; i++) {
-            const bx = cx + (i % 2 === 0 ? -70 : 70) + Math.sin(now / 200 + i) * 15;
-            const by = cy + 20 + Math.cos(now / 300 + i) * 25;
-            ctx.beginPath(); ctx.arc(bx, by, 10, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(173, 216, 230, 0.6)"; ctx.fill();
-            ctx.strokeStyle = "white"; ctx.stroke();
-        }
-    }
-    ctx.restore();
+    return (now % 5500 > 5000) ? 2 : 1;
 }
 
+// 픽셀 이미지 드로잉 (이미지 1~4번 좌표 완벽 구현)
 function drawSlime() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2 + 40;
+    const cx = canvas.width / 2, cy = canvas.height / 2 + 40;
     const now = Date.now();
     const idleTime = now - lastActionTime;
+    let currentDisplayState = getBlinkState();
 
-    if (idleTime > 30000 && !isDragging) {
-        ctx.fillStyle = "#555"; ctx.font = "bold 16px Arial";
-        ctx.fillText("Zzz...", cx + 50, cy - 65 + Math.sin(now/300)*5);
+    // 4. 30초 무반응 Zzz..
+    if (idleTime > 30000 && !isDragging && state === 1) {
+        currentDisplayState = 2;
+        ctx.fillStyle = "#555"; ctx.font = "bold 18px Arial";
+        ctx.fillText("Zzz...", cx + 60, cy - 80 + Math.sin(now/400)*8);
     }
 
-    if (effectType) drawEffect(effectType);
+    // 상호작용 강제 상태 적용
+    if (state !== 1) currentDisplayState = state;
+    
+    // 11. 배부름 좌우 흔들기
+    let offsetX = 0;
+    if (isFullState) {
+        currentDisplayState = 2;
+        offsetX = Math.sin(now / 100) * 5;
+    }
 
     ctx.fillStyle = SLIME_COLOR;
-
-    // image_e1cade.png 참고 디자인 및 상호작용 시 모양 유지
-    if (state === 3) { // 위로 드래그 시만 늘어남
-        ctx.fillRect(cx - 15, cy - 80, 30, 10); ctx.fillRect(cx - 20, cy - 70, 40, 90);
-        ctx.fillRect(cx - 30, cy - 50, 10, 70); ctx.fillRect(cx + 20, cy - 50, 10, 70);
-        ctx.fillRect(cx - 30, cy + 20, 60, 10);
-    } else { // 평소 및 상호작용 시 고정된 계단 모양
-        ctx.fillRect(cx - 35, cy - 50, 70, 10);
-        ctx.fillRect(cx - 45, cy - 40, 90, 10);
-        ctx.fillRect(cx - 55, cy - 30, 110, 30);
-        ctx.fillRect(cx - 45, cy, 90, 10);
+    // 몸체 픽셀 (이미지 번호별 대응)
+    if (currentDisplayState === 3) { // 3번 늘어남
+        ctx.fillRect(cx-10+offsetX, cy-110, 20, 10); ctx.fillRect(cx-20+offsetX, cy-100, 40, 10);
+        ctx.fillRect(cx-30+offsetX, cy-90, 60, 100); ctx.fillRect(cx-20+offsetX, cy+10, 40, 10);
+    } else if (currentDisplayState === 4) { // 4번 클릭 상태
+        ctx.fillRect(cx-45+offsetX, cy-50, 90, 40); ctx.fillRect(cx-55+offsetX, cy-40, 110, 20);
+    } else { // 1, 2번 기본/눈감음
+        ctx.fillRect(cx-30+offsetX, cy-70, 60, 10); ctx.fillRect(cx-40+offsetX, cy-60, 80, 10);
+        ctx.fillRect(cx-50+offsetX, cy-50, 100, 40); ctx.fillRect(cx-40+offsetX, cy-10, 80, 10);
     }
 
-    let eyeY = (state === 3) ? cy - 40 : cy - 25;
-    ctx.strokeStyle = "black"; ctx.lineWidth = 3.5; ctx.lineCap = "round";
-
-    const blinkCycle = now % 5500;
-    const isBlinking = (state === 1 && blinkCycle > 5000);
-
-    if (state === 4) { // 상호작용 시 ^^ 눈 (모양은 그대로)
-        ctx.beginPath();
-        ctx.moveTo(cx - 22, eyeY + 2); ctx.lineTo(cx - 17, eyeY - 4); ctx.lineTo(cx - 12, eyeY + 2);
-        ctx.moveTo(cx + 12, eyeY + 2); ctx.lineTo(cx + 17, eyeY - 4); ctx.lineTo(cx + 22, eyeY + 2);
-        ctx.stroke();
-    } else if (isBlinking || (idleTime > 30000 && !isDragging)) { 
-        ctx.beginPath();
-        ctx.moveTo(cx - 20, eyeY); ctx.lineTo(cx - 13, eyeY);
-        ctx.moveTo(cx + 13, eyeY); ctx.lineTo(cx + 20, eyeY);
-        ctx.stroke();
-    } else { 
+    // 눈 그리기
+    const eyeY = (currentDisplayState === 3) ? cy-65 : cy-35;
+    ctx.strokeStyle = "black"; ctx.lineWidth = 4; ctx.lineCap = "round";
+    
+    if (currentDisplayState === 1) { // 1번 점눈
         ctx.fillStyle = "black";
-        ctx.fillRect(cx - 20, eyeY - 3, 7, 7); ctx.fillRect(cx + 13, eyeY - 3, 7, 7);
-        ctx.beginPath(); ctx.arc(cx, eyeY + 8, 5, 0, Math.PI); ctx.stroke();
+        ctx.fillRect(cx-20+offsetX, eyeY-4, 8, 8); ctx.fillRect(cx+12+offsetX, eyeY-4, 8, 8);
+    } else if (currentDisplayState === 2) { // 2번 감은눈
+        ctx.beginPath(); ctx.moveTo(cx-22+offsetX, eyeY); ctx.lineTo(cx-10+offsetX, eyeY);
+        ctx.moveTo(cx+10+offsetX, eyeY); ctx.lineTo(cx+22+offsetX, eyeY); ctx.stroke();
+    } else if (currentDisplayState === 4) { // 4번 > < 눈
+        ctx.beginPath();
+        ctx.moveTo(cx-25+offsetX, eyeY-5); ctx.lineTo(cx-15+offsetX, eyeY); ctx.lineTo(cx-25+offsetX, eyeY+5);
+        ctx.moveTo(cx+25+offsetX, eyeY-5); ctx.lineTo(cx+15+offsetX, eyeY); ctx.lineTo(cx+25+offsetX, eyeY+5);
+        ctx.stroke();
+    } else if (currentDisplayState === 5) { // ^^ 눈
+        ctx.beginPath();
+        ctx.moveTo(cx-25+offsetX, eyeY+3); ctx.lineTo(cx-18+offsetX, eyeY-4); ctx.lineTo(cx-11+offsetX, eyeY+3);
+        ctx.moveTo(cx+11+offsetX, eyeY+3); ctx.lineTo(cx+18+offsetX, eyeY-4); ctx.lineTo(cx+25+offsetX, eyeY+3);
+        ctx.stroke();
+    }
+
+    if (effect) drawEffect(effect, cx, cy);
+}
+
+// 6~9. 특수 효과 구현
+function drawEffect(type, cx, cy) {
+    const bounce = Math.sin(Date.now() / 200) * 5;
+    ctx.font = "30px Arial";
+    if (type === 'heart') ctx.fillText("❤️", cx - 15, cy - 100 + bounce);
+    if (type === 'water') ctx.fillText("💧", cx - 15, cy - 100 + bounce);
+    if (type === 'star') ctx.fillText("⭐", cx - 15, cy - 100 + bounce);
+    if (type === 'bubbles') {
+        ctx.fillText("🫧", cx - 80, cy - 20 + bounce);
+        ctx.fillText("🫧", cx + 50, cy - 40 - bounce);
     }
 }
 
-function triggerAction(effect, f, c) {
-    state = 4; effectType = effect; lastActionTime = Date.now();
-    fullness = Math.min(100, fullness + f);
-    cleanliness = Math.min(100, cleanliness + c);
-    updateBars();
-    setTimeout(() => { if(!isDragging) { state = 1; effectType = null; } }, 1000);
+// 상호작용 처리
+function trigger(type, fChange, cChange) {
+    const now = Date.now();
+    // 12, 13 제약 사항 체크
+    if (type === 'feed') {
+        if (isFullState) { alert("아직 배부르대요!"); return; }
+        feedCount++;
+        if (feedCount >= 5) {
+            isFullState = true;
+            setTimeout(() => { isFullState = false; feedCount = 0; }, 10000);
+        }
+    }
+    if (type === 'cookie') {
+        if (now - lastCookieTime < 3600000) { 
+            const left = Math.ceil((3600000 - (now - lastCookieTime)) / 60000);
+            alert(`쿠키는 1시간에 한 번만! (${left}분 남음)`); return; 
+        }
+        lastCookieTime = now;
+    }
+
+    state = 5; effect = type === 'feed' ? 'heart' : type === 'water' ? 'water' : type === 'cookie' ? 'star' : 'bubbles';
+    fullness = Math.min(100, fullness + fChange);
+    cleanliness = Math.min(100, cleanliness + cChange);
+    lastActionTime = now; updateBars();
+    setTimeout(() => { state = 1; effect = null; }, 2000); // 10. 2초 유지
 }
+
+// 15. 20분당 1% 감소 로직 (0.05% per minute)
+setInterval(() => {
+    fullness = Math.max(0, fullness - (1/1200)); // 20분=1200초
+    cleanliness = Math.max(0, cleanliness - (1/1200));
+    updateBars();
+}, 1000);
 
 function updateBars() {
-    document.getElementById('fullnessBar').style.height = fullness + "%";
+    document.getElementById('fullBar').style.height = fullness + "%";
     document.getElementById('cleanBar').style.height = cleanliness + "%";
 }
 
-canvas.onmousedown = () => { isDragging = true; lastActionTime = Date.now(); };
+// 2, 3. 드래그 및 클릭 이벤트
+canvas.onmousedown = () => { isDragging = true; state = 4; lastActionTime = Date.now(); };
 window.onmousemove = (e) => {
     if (!isDragging) return;
     const rect = canvas.getBoundingClientRect();
-    state = (e.clientY - rect.top < 120) ? 3 : 4;
+    state = (e.clientY - rect.top < 100) ? 3 : 4;
 };
 window.onmouseup = () => { isDragging = false; state = 1; };
 
-document.getElementById('feedBtn').onclick = () => triggerAction('heart', 10, 0);
-document.getElementById('waterBtn').onclick = () => triggerAction('water', 5, 0);
-document.getElementById('cookieBtn').onclick = () => triggerAction('star', 15, 0);
-document.getElementById('showerBtn').onclick = () => triggerAction('bubbles', 0, 10);
+// 버튼 연결 (16. 수치 적용)
+document.getElementById('feedBtn').onclick = () => trigger('feed', 1, 0);
+document.getElementById('waterBtn').onclick = () => trigger('water', 1, 0);
+document.getElementById('cookieBtn').onclick = () => trigger('cookie', 2, 0);
+document.getElementById('showerBtn').onclick = () => trigger('bubbles', 0, 10);
 
 function animate() { drawSlime(); requestAnimationFrame(animate); }
-updateBars(); animate();
+animate(); updateBars(); // 14. 초기 50% 설정
