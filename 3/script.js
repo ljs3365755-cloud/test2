@@ -1,24 +1,23 @@
 const canvas = document.getElementById('slimeCanvas');
 const ctx = canvas.getContext('2d');
-function resizeCanvas() {
-    const ratio = window.devicePixelRatio || 1;
-    const size = window.innerWidth < 768 ? window.innerWidth * 0.8 : 250;
-    
-    // 스타일 크기 설정
-    canvas.style.width = size + "px";
-    canvas.style.height = size + "px";
-    
-    // 실제 드로잉 해상도 설정 (픽셀 깨짐 방지)
-    canvas.width = size * ratio;
-    canvas.height = size * ratio;
-    ctx.scale(ratio, ratio);
-}
-
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas(); // 초기 실행
 const SLIME_COLOR = "#CDB4DB";
 
-let state = 1; // 1:기본, 2:눈감음, 3:늘어남, 4:클릭(><), 5:상호작용(^^)
+// --- [수정 1] 모바일 해상도 및 크기 보정 로직 ---
+let renderSize = 250; 
+function initCanvas() {
+    const ratio = window.devicePixelRatio || 1;
+    renderSize = window.innerWidth < 768 ? window.innerWidth * 0.8 : 250;
+    canvas.style.width = renderSize + "px";
+    canvas.style.height = renderSize + "px";
+    canvas.width = renderSize * ratio;
+    canvas.height = renderSize * ratio;
+    ctx.scale(ratio, ratio);
+}
+window.addEventListener('resize', initCanvas);
+initCanvas();
+
+// 상태 변수들
+let state = 1; 
 let fullness = 50; 
 let cleanliness = 50;
 let effect = null;
@@ -28,22 +27,22 @@ let feedCount = 0;
 let lastCookieTime = 0;
 let isFullState = false;
 
-// 1. 눈 감기 모션 (5초 뜨고 0.5초 감기)
+// 눈 깜빡임 로직
 function getBlinkState() {
     if (state !== 1) return state;
     const now = Date.now();
     return (now % 5500 > 5000) ? 2 : 1;
 }
 
-// 픽셀 이미지 드로잉 (이미지 1~4번 좌표 및 늘어나는 눈 모션 완벽 구현)
+// --- [수정 2] 드로잉 함수 (renderSize 기준 좌표) ---
 function drawSlime() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const cx = canvas.width / 2, cy = canvas.height / 2 + 40;
+    const cx = renderSize / 2; // 중앙 정렬
+    const cy = renderSize / 2 + 30; 
     const now = Date.now();
     const idleTime = now - lastActionTime;
     let currentDisplayState = getBlinkState();
 
-    // 4. 30초 무반응 Zzz..
     if (idleTime > 30000 && !isDragging && state === 1) {
         currentDisplayState = 2;
         ctx.fillStyle = "#555"; ctx.font = "bold 18px Arial";
@@ -51,53 +50,41 @@ function drawSlime() {
     }
 
     if (state !== 1) currentDisplayState = state;
-    
-    // 11. 배부름 좌우 흔들기
     let offsetX = 0;
-    if (isFullState) {
-        currentDisplayState = 2;
-        offsetX = Math.sin(now / 100) * 5;
-    }
+    if (isFullState) { currentDisplayState = 2; offsetX = Math.sin(now / 100) * 5; }
 
     ctx.fillStyle = SLIME_COLOR;
 
-    // --- 몸체 드로잉 (이미지 1~4번 픽셀 구조) ---
-    if (currentDisplayState === 3) { // 3번 늘어남
+    // 몸체 그리기 (이미지 1~4번 픽셀)
+    if (currentDisplayState === 3) { 
         ctx.fillRect(cx-10+offsetX, cy-110, 20, 10); ctx.fillRect(cx-20+offsetX, cy-100, 40, 10);
         ctx.fillRect(cx-30+offsetX, cy-90, 60, 100); ctx.fillRect(cx-20+offsetX, cy+10, 40, 10);
-    } else if (currentDisplayState === 4) { // 4번 클릭
+    } else if (currentDisplayState === 4) {
         ctx.fillRect(cx-45+offsetX, cy-50, 90, 40); ctx.fillRect(cx-55+offsetX, cy-40, 110, 20);
-    } else { // 1, 2번 기본
+    } else {
         ctx.fillRect(cx-30+offsetX, cy-70, 60, 10); ctx.fillRect(cx-40+offsetX, cy-60, 80, 10);
         ctx.fillRect(cx-50+offsetX, cy-50, 100, 40); ctx.fillRect(cx-40+offsetX, cy-10, 80, 10);
     }
 
-    // --- 눈 그리기 (늘어남 모션 반영) ---
-    let eyeY = (currentDisplayState === 3) ? cy - 75 : cy - 35; 
+    // 눈 그리기 (늘어남 대응)
+    let eyeY = (currentDisplayState === 3) ? cy - 75 : cy - 35;
     ctx.strokeStyle = "black"; ctx.lineWidth = 4; ctx.lineCap = "round";
     
-    if (currentDisplayState === 3) { 
-        // 3번 이미지: 세로로 주욱 늘어난 눈
+    if (currentDisplayState === 3) {
         ctx.fillStyle = "black";
-        ctx.fillRect(cx - 20 + offsetX, eyeY, 8, 30); 
-        ctx.fillRect(cx + 12 + offsetX, eyeY, 8, 30);
-    } else if (currentDisplayState === 1) { 
-        // 1번 이미지: 기본 점눈
+        ctx.fillRect(cx-20+offsetX, eyeY, 8, 30); ctx.fillRect(cx+12+offsetX, eyeY, 8, 30);
+    } else if (currentDisplayState === 1) {
         ctx.fillStyle = "black";
-        ctx.fillRect(cx - 20 + offsetX, eyeY - 4, 8, 8); 
-        ctx.fillRect(cx + 12 + offsetX, eyeY - 4, 8, 8);
-    } else if (currentDisplayState === 2) { 
-        // 2번 이미지: 감은 눈
+        ctx.fillRect(cx-20+offsetX, eyeY-4, 8, 8); ctx.fillRect(cx+12+offsetX, eyeY-4, 8, 8);
+    } else if (currentDisplayState === 2) {
         ctx.beginPath(); ctx.moveTo(cx-22+offsetX, eyeY); ctx.lineTo(cx-10+offsetX, eyeY);
         ctx.moveTo(cx+10+offsetX, eyeY); ctx.lineTo(cx+22+offsetX, eyeY); ctx.stroke();
-    } else if (currentDisplayState === 4) { 
-        // 4번 이미지: > < 눈
+    } else if (currentDisplayState === 4) {
         ctx.beginPath();
         ctx.moveTo(cx-25+offsetX, eyeY-5); ctx.lineTo(cx-15+offsetX, eyeY); ctx.lineTo(cx-25+offsetX, eyeY+5);
         ctx.moveTo(cx+25+offsetX, eyeY-5); ctx.lineTo(cx+15+offsetX, eyeY); ctx.lineTo(cx+25+offsetX, eyeY+5);
         ctx.stroke();
-    } else if (currentDisplayState === 5) { 
-        // 상호작용: ^^ 눈
+    } else if (currentDisplayState === 5) {
         ctx.beginPath();
         ctx.moveTo(cx-25+offsetX, eyeY+3); ctx.lineTo(cx-18+offsetX, eyeY-4); ctx.lineTo(cx-11+offsetX, eyeY+3);
         ctx.moveTo(cx+11+offsetX, eyeY+3); ctx.lineTo(cx+18+offsetX, eyeY-4); ctx.lineTo(cx+25+offsetX, eyeY+3);
@@ -105,9 +92,8 @@ function drawSlime() {
     }
 
     if (effect) drawEffect(effect, cx, cy);
-} // drawSlime 함수 끝
+}
 
-// 6~9. 특수 효과 구현
 function drawEffect(type, cx, cy) {
     const bounce = Math.sin(Date.now() / 200) * 5;
     ctx.font = "30px Arial";
@@ -115,107 +101,66 @@ function drawEffect(type, cx, cy) {
     if (type === 'water') ctx.fillText("💧", cx - 15, cy - 100 + bounce);
     if (type === 'star') ctx.fillText("⭐", cx - 15, cy - 100 + bounce);
     if (type === 'bubbles') {
-        ctx.fillText("🫧", cx - 80, cy - 20 + bounce);
-        ctx.fillText("🫧", cx + 50, cy - 40 - bounce);
+        ctx.fillText("🫧", cx - 80, cy - 20 + bounce); ctx.fillText("🫧", cx + 50, cy - 40 - bounce);
     }
 }
 
-// 상호작용 처리
+// 상호작용 및 사운드 로직
 function trigger(type, fChange, cChange) {
     const now = Date.now();
-    const soundEat = document.getElementById('soundEat');
-    const soundReject = document.getElementById('soundReject');
+    const sEat = document.getElementById('soundEat');
+    const sNo = document.getElementById('soundReject');
 
-    // 1. 거부 상황 체크 (배부름 혹은 쿠키 쿨타임)
-    let isRejected = false;
-    if (type === 'feed' && isFullState) isRejected = true;
-    if (type === 'cookie' && (now - lastCookieTime < 3600000)) isRejected = true;
-
-    if (isRejected) {
-        // [추가] 거부 소리 (no.mp3)
-        if(soundReject) { soundReject.currentTime = 0; soundReject.play(); }
-        
-        if (type === 'feed') alert("아직 배부르대요!");
-        else {
-            const left = Math.ceil((3600000 - (now - lastCookieTime)) / 60000);
-            alert(`쿠키는 1시간에 한 번만! (${left}분 남음)`);
-        }
-        return; 
+    if ((type === 'feed' && isFullState) || (type === 'cookie' && now - lastCookieTime < 3600000)) {
+        if(sNo) { sNo.currentTime = 0; sNo.play(); }
+        alert(type === 'feed' ? "배부르대요!" : "쿠키는 1시간에 한 번!"); return;
     }
 
-    // 2. 정상 실행 (먹기/씻기)
-    // [추가] 먹는 소리 (ggd-yumyum.mp3)
-    if(soundEat) { soundEat.currentTime = 0; soundEat.play(); }
-
-    if (type === 'feed') {
-        feedCount++;
-        if (feedCount >= 5) {
-            isFullState = true;
-            setTimeout(() => { isFullState = false; feedCount = 0; }, 10000);
-        }
-    }
+    if(sEat) { sEat.currentTime = 0; sEat.play(); }
+    if (type === 'feed') { feedCount++; if (feedCount >= 5) { isFullState = true; setTimeout(() => { isFullState = false; feedCount = 0; }, 10000); } }
     if (type === 'cookie') lastCookieTime = now;
 
-    // 상태 변경 및 게이지 업데이트
-    state = 5; 
-    effect = type === 'feed' ? 'heart' : type === 'water' ? 'water' : type === 'cookie' ? 'star' : 'bubbles';
-    fullness = Math.min(100, fullness + fChange);
-    cleanliness = Math.min(100, cleanliness + cChange);
-    lastActionTime = now; 
-    updateBars();
+    state = 5; effect = type === 'feed' ? 'heart' : type === 'water' ? 'water' : type === 'cookie' ? 'star' : 'bubbles';
+    fullness = Math.min(100, fullness + fChange); cleanliness = Math.min(100, cleanliness + cChange);
+    lastActionTime = now; updateBars();
     setTimeout(() => { state = 1; effect = null; }, 2000);
 }
-// 15. 게이지 감소 로직
-setInterval(() => {
-    fullness = Math.max(0, fullness - (1/1200));
-    cleanliness = Math.max(0, cleanliness - (1/1200));
-    updateBars();
-}, 1000);
 
 function updateBars() {
-    const fb = document.getElementById('fullBar');
-    const cb = document.getElementById('cleanBar');
-    if(fb) fb.style.height = fullness + "%";
-    if(cb) cb.style.height = cleanliness + "%";
+    document.getElementById('fullBar').style.height = fullness + "%";
+    document.getElementById('cleanBar').style.height = cleanliness + "%";
 }
 
-// 2, 3. 드래그 및 클릭 이벤트 (늘어나는 모션 + 사운드 통합)
-canvas.onmousedown = (e) => { 
-    isDragging = true; 
-    state = 4; // 클릭 눈 (> <)
-    lastActionTime = Date.now();
-    
-    // 찍(squeaky) 소리 재생
+// --- [수정 3] 마우스/터치 통합 이벤트 ---
+function handleStart(e) {
+    if (e.cancelable) e.preventDefault();
+    isDragging = true; state = 4; lastActionTime = Date.now();
     const snd = document.getElementById('soundSelect');
-    if(snd) { snd.currentTime = 0; snd.play(); } 
-};
+    if(snd) { snd.currentTime = 0; snd.play(); }
+}
 
-window.onmousemove = (e) => {
+function handleMove(e) {
     if (!isDragging) return;
-    
+    if (e.cancelable) e.preventDefault();
     const rect = canvas.getBoundingClientRect();
-    const mouseY = e.clientY - rect.top;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const mouseY = (clientY - rect.top) * (renderSize / rect.height);
+    state = (mouseY < 80) ? 3 : 4; // 늘어남 감지
+}
 
-    // 마우스가 위로 올라가면 이미지 3번(늘어남) 상태로 변경
-    if (mouseY < 100) {
-        state = 3; 
-    } else {
-        state = 4;
-    }
-};
+function handleEnd() { isDragging = false; state = 1; }
 
-window.onmouseup = () => { 
-    isDragging = false; 
-    state = 1; // 기본 상태로 복귀
-};
+canvas.onmousedown = handleStart;
+window.onmousemove = handleMove;
+window.onmouseup = handleEnd;
+canvas.addEventListener('touchstart', handleStart, { passive: false });
+window.addEventListener('touchmove', handleMove, { passive: false });
+window.addEventListener('touchend', handleEnd);
 
-// 버튼 연결 (상호작용 함수 연결)
 document.getElementById('feedBtn').onclick = () => trigger('feed', 1, 0);
 document.getElementById('waterBtn').onclick = () => trigger('water', 1, 0);
 document.getElementById('cookieBtn').onclick = () => trigger('cookie', 2, 0);
 document.getElementById('showerBtn').onclick = () => trigger('bubbles', 0, 10);
 
-// 애니메이션 실행 루프
 function animate() { drawSlime(); requestAnimationFrame(animate); }
-animate(); 
-updateBars(); // 초기 게이지 설정
+animate(); updateBars();

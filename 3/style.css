@@ -1,169 +1,108 @@
-/* 캡처 화면 레이아웃 및 스타일 완벽 반영 */
-body { 
-    background-color: #f8f9fa; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    min-height: 100vh; 
-    margin: 0; 
-    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; 
+body {
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
 }
 
-.container { 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    width: 100%; 
-    max-width: 500px; 
+.container { text-align: center; }
+
+.name-input {
+    border: none;
+    border-bottom: 2px solid #CDB4DB;
+    background: none;
+    text-align: center;
+    font-size: 18px;
+    margin-bottom: 20px;
+    outline: none;
 }
 
-/* 슬라임 이름 입력부 스타일 */
-#slimeName { 
-    border: none; 
-    border-bottom: 2px solid #CDB4DB; 
-    background: transparent; 
-    text-align: center; 
-    font-size: 18px; 
-    font-weight: bold; 
-    padding: 5px; 
-    outline: none; 
-    margin-bottom: 25px; 
-    color: #555; 
+.game-card {
+    background: white;
+    padding: 30px;
+    border-radius: 30px;
+    display: flex;
+    gap: 30px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    align-items: center;
 }
 
-/* 메인 게임 카드 영역 */
-.game-card { 
-    background: white; 
-    border-radius: 30px; 
-    padding: 30px 40px; 
-    box-shadow: 0 15px 40px rgba(0,0,0,0.05); 
-    display: flex; 
-    gap: 30px; 
-    align-items: center; 
-    position: relative; 
+#slimeCanvas {
+    background: #fff;
+    border: 2px solid #333;
+    image-rendering: pixelated;
 }
 
-/* 캔버스 경계선 */
-.canvas-container { 
-    border: 3px solid #333; 
-    line-height: 0; 
-    background-color: #fff;
+.status-side {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-#slimeCanvas { 
-    width: 250px; 
-    height: 250px; 
-    cursor: pointer; 
-    image-rendering: pixelated; /* 픽셀 깨짐 방지 */
+.bar-container { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+
+.bar-outer {
+    width: 30px;
+    height: 150px;
+    background: #eee;
+    border-radius: 15px;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid #333;
 }
 
-/* 우측 상태 바 영역 */
-.status-side { 
-    display: flex; 
-    gap: 15px; 
+.bar-inner {
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    transition: height 0.3s;
 }
 
-.status-item { 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    gap: 10px; 
+.fullness { background: #FFB703; }
+.cleanliness { background: #219EBC; }
+
+.button-row {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
 }
 
-/* 게이지 바 디자인 */
-.bar-outer { 
-    width: 32px; 
-    height: 180px; 
-    border: 2px solid #333; 
-    border-radius: 16px; 
-    overflow: hidden; 
-    display: flex; 
-    flex-direction: column-reverse; /* 아래에서 위로 채워짐 */
-    background: #fff; 
+button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid #333;
+    background: white;
+    font-size: 30px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #333;
 }
 
-.bar-inner { 
-    width: 100%; 
-    transition: height 0.5s ease; /* 14. 50% 초기 설정 및 변화 애니메이션 */
-}
+button:active { transform: translateY(2px); box-shadow: 0 2px 0 #333; }
 
-/* 게이지 색상 */
-.full { background: #FF9F1C; } /* 배고픔 */
-.clean { background: #2EC4B6; } /* 청결도 */
-
-.icon { font-size: 20px; margin-top: 5px; }
-
-/* 상태 메시지 */
-#statusMsg { 
-    margin: 30px 0; 
-    color: #333; 
-    font-size: 15px; 
-    font-weight: 500; 
-}
-
-/* 하단 버튼 그룹 */
-.button-row { 
-    display: flex; 
-    gap: 20px; 
-}
-
-button { 
-    width: 70px; 
-    height: 70px; 
-    border-radius: 50%; 
-    border: 2px solid #333; 
-    background: white; 
-    font-size: 32px; 
-    cursor: pointer; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    transition: transform 0.1s, box-shadow 0.1s;
-    box-shadow: 0 5px 0 #333; /* 버튼 입체감 */
-}
-
-button:active { 
-    transform: translateY(4px); 
-    box-shadow: 0 1px 0 #333; 
-}
-
-button:disabled { 
-    opacity: 0.5; 
-    cursor: not-allowed; 
-}
+/* 모바일 대응 */
 @media screen and (max-width: 768px) {
     .game-card {
-        flex-direction: column; /* 세로로 배치 */
+        flex-direction: column;
+        width: 85vw;
         padding: 20px;
-        width: 90%;
     }
-
     #slimeCanvas {
-        width: 80vw;  /* 화면 너비의 80%로 캔버스 확대 */
-        height: 80vw;
+        width: 70vw;
+        height: 70vw;
     }
-
     .status-side {
-        flex-direction: row; /* 게이지 바를 가로로 배치 */
-        justify-content: center;
+        flex-direction: row;
         width: 100%;
-        margin-top: 20px;
+        justify-content: space-evenly;
     }
-
-    .bar-outer {
-        width: 60px;  /* 모바일에서 게이지 바를 더 두껍게 */
-        height: 150px;
-    }
-
-    .button-row {
-        gap: 10px;
-        flex-wrap: wrap; /* 버튼이 넘치면 다음 줄로 */
-        justify-content: center;
-    }
-
     button {
-        width: 80px;  /* 터치하기 편하게 버튼 크기 확대 */
-        height: 80px;
-        font-size: 40px;
+        width: 70px;
+        height: 70px;
+        font-size: 35px;
     }
 }

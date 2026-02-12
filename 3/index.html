@@ -2,44 +2,43 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>픽셀 슬라임 키우기</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>내 슬라임 키우기</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <div class="name-tag">
-            <input type="text" id="slimeName" placeholder="슬라임 이름 입력..." maxlength="10">
-        </div>
+        <input type="text" placeholder="슬라임 이름 입력..." class="name-input">
         
         <div class="game-card">
-            <div class="canvas-container">
-                <canvas id="slimeCanvas" width="300" height="300"></canvas>
-            </div>
+            <canvas id="slimeCanvas"></canvas>
+            
             <div class="status-side">
-                <div class="status-item">
-                    <div class="bar-outer"><div id="fullBar" class="bar-inner full"></div></div>
-                    <div class="icon">🍙</div>
+                <div class="bar-container">
+                    <div class="bar-outer"><div id="fullBar" class="bar-inner fullness"></div></div>
+                    <span>🍱</span>
                 </div>
-                <div class="status-item">
-                    <div class="bar-outer"><div id="cleanBar" class="bar-inner clean"></div></div>
-                    <div class="icon">🚿</div>
+                <div class="bar-container">
+                    <div class="bar-outer"><div id="cleanBar" class="bar-inner cleanliness"></div></div>
+                    <span>🚿</span>
                 </div>
             </div>
         </div>
 
-        <p id="statusMsg">슬라임을 클릭하거나 버튼을 눌러보세요!</p>
+        <p class="hint">슬라임을 클릭하거나 버튼을 눌러보세요!</p>
 
         <div class="button-row">
-            <button id="feedBtn" title="삼각김밥">🍙</button>
-            <button id="waterBtn" title="물">💧</button>
-            <button id="cookieBtn" title="쿠키">🍪</button>
-            <button id="showerBtn" title="샤워">🚿</button>
+            <button id="feedBtn">🍙</button>
+            <button id="waterBtn">💧</button>
+            <button id="cookieBtn">🍪</button>
+            <button id="showerBtn">🚿</button>
         </div>
     </div>
-<audio id="soundSelect" src="squeaky.mp3"></audio>
-<audio id="soundEat" src="ggd-yumyum.mp3"></audio>
-<audio id="soundReject" src="no.mp3"></audio>
 
-<script src="script.js"></script>
+    <audio id="soundSelect" src="squeaky.mp3"></audio>
+    <audio id="soundEat" src="ggd-yumyum.mp3"></audio>
+    <audio id="soundReject" src="no.mp3"></audio>
+
+    <script src="script.js"></script>
 </body>
 </html>
