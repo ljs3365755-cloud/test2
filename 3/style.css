@@ -61,9 +61,17 @@ body {
     position: relative;
     display: flex;
     flex-direction: column-reverse;
+    /* 게이지가 풀일 때 튀어나가지 않도록 수정 */
+    overflow: hidden; 
 }
 
-.bar { width: 100%; transition: height 0.3s; border-radius: 0 0 10px 10px; }
+.bar { 
+    width: 100%; 
+    transition: height 0.3s ease-out; 
+    /* 내부 바의 곡률은 컨테이너가 overflow:hidden이므로 0으로 설정해도 무방 */
+    border-radius: 0; 
+}
+
 .fullness { background: #FF9F1C; }
 .cleanliness { background: #2EC4B6; }
 

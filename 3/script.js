@@ -17,13 +17,15 @@ let isDragging = false, isFull = false, isShaking = false, isBlinking = false;
 let effectType = null;
 let shakeOffset = 0;
 
-let fullness = 100;
-let cleanliness = 100;
+// 초기 게이지 50% 설정
+let fullness = 50;
+let cleanliness = 50;
 let waterCount = 0;
 let lastCookieTime = 0;
 
 function safePlay(filename) { try { new Audio(filename).play().catch(() => {}); } catch (e) {} }
 
+// [핵심] 효과 그리기 함수 (거품 로직 강화)
 function drawEffect(type) {
     const now = Date.now();
     const x = 100 + shakeOffset;
@@ -47,12 +49,20 @@ function drawEffect(type) {
             ctx.lineTo(x+Math.cos(rot)*10, y+10+Math.sin(rot)*10); rot+=Math.PI/5;
         } ctx.fill();
     } else if (type === 'bubbles') {
-        ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-        for(let i=0; i<6; i++) {
-            const bx = 60 + Math.sin(now/200 + i)*60 + 40;
-            const by = 100 + Math.cos(now/300 + i)*40 + 40;
-            ctx.beginPath(); ctx.arc(bx + shakeOffset, by, 10, 0, Math.PI*2); ctx.fill();
-            ctx.strokeStyle = "white"; ctx.stroke();
+        // [복구] 비누 거품 애니메이션
+        for(let i=0; i<8; i++) {
+            const angle = (now / 400) + (i * Math.PI / 4);
+            const bx = 100 + Math.cos(angle) * 50 + shakeOffset;
+            const by = 120 + Math.sin(angle * 1.5) * 30;
+            const radius = 8 + Math.sin(now / 200 + i) * 4;
+
+            ctx.beginPath();
+            ctx.arc(bx, by, radius, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+            ctx.fill();
+            ctx.strokeStyle = "rgba(200, 200, 255, 0.5)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
         }
     }
 }
@@ -63,12 +73,15 @@ function drawSlime() {
     const idleTime = now - lastActionTime;
     shakeOffset = isShaking ? Math.sin(now / 50) * 15 : 0;
 
+    // 30초 부동 시 Zzz...
     if (idleTime > 30000 && !isDragging && !isFull) {
         ctx.fillStyle = "#555"; ctx.font = "bold 18px Arial";
         ctx.fillText("Zzz...", 135 + shakeOffset, 55 + Math.sin(now/300)*5);
     }
 
-    if (effectType) drawEffect(effectType);
+    // [중요] 거품은 슬라임 뒤가 아니라 '위'에 그려지도록 몸체 다음에 호출하거나, 
+    // 여기서 effectType을 체크하여 적절한 레이어에 배치합니다.
+    if (effectType && effectType !== 'bubbles') drawEffect(effectType);
 
     ctx.fillStyle = SLIME_COLOR;
     if (state === 3) {
@@ -79,6 +92,9 @@ function drawSlime() {
         ctx.fillRect(60+shakeOffset, 100, 80, 50); ctx.fillRect(70+shakeOffset, 90, 60, 10);
         ctx.fillRect(50+shakeOffset, 110, 10, 30); ctx.fillRect(140+shakeOffset, 110, 10, 30);
     }
+
+    // 거품은 슬라임 몸체 위를 덮도록 여기서 다시 체크
+    if (effectType === 'bubbles') drawEffect('bubbles');
 
     ctx.strokeStyle = "black"; ctx.lineWidth = 2.5; ctx.lineCap = "round";
     if (isFull || (idleTime > 30000 && !isDragging) || isBlinking) {
@@ -95,8 +111,10 @@ function drawSlime() {
 }
 
 function updateBars() {
-    fullnessBar.style.height = fullness + "%";
-    cleanBar.style.height = cleanliness + "%";
+    const fPercent = Math.min(100, Math.max(0, fullness));
+    const cPercent = Math.min(100, Math.max(0, cleanliness));
+    fullnessBar.style.height = fPercent + "%";
+    cleanBar.style.height = cPercent + "%";
 }
 
 function triggerReaction(newState, newEffect, fPlus, cPlus) {
@@ -104,7 +122,9 @@ function triggerReaction(newState, newEffect, fPlus, cPlus) {
     state = newState; effectType = newEffect; lastActionTime = Date.now();
     fullness = Math.min(100, fullness + fPlus);
     cleanliness = Math.min(100, cleanliness + cPlus);
-    updateBars(); safePlay('ggd-yumyum.mp3');
+    updateBars(); 
+    // 사운드 파일명이 다를 수 있으니 확인 필요
+    safePlay('ggd-yumyum.mp3'); 
     setTimeout(() => { if (!isFull) { state = 1; effectType = null; } }, 2000);
 }
 
@@ -135,6 +155,7 @@ canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleStart()
 window.addEventListener('touchmove', (e) => { if(isDragging) e.preventDefault(); handleMove(e); }, {passive: false});
 window.addEventListener('touchend', handleEnd);
 
+// 10분마다 1% 감소
 setInterval(() => {
     fullness = Math.max(0, fullness - 1);
     cleanliness = Math.max(0, cleanliness - 1);
@@ -148,4 +169,5 @@ function animate() {
     } else isBlinking = false;
     drawSlime(); requestAnimationFrame(animate);
 }
+
 updateBars(); animate();
