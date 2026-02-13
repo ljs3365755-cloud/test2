@@ -115,25 +115,24 @@ function trigger(type, fChange, cChange, expGain = 0) {
     const sWhistle = document.getElementById('soundWhistle'); 
     const sPat = document.getElementById('soundPat');
 
-    // 1. 거부 조건 체크 (이미지 속 내용 포함됨)
+    // 1. 거부 조건 체크 (연속 사용 제한 등)
     if ((type === 'feed' && isFullState) || (type === 'ball' && isTiredState) || (type === 'pat' && isPatLimitState)) {
         if(sNo) { sNo.currentTime = 0; sNo.play(); }
         return;
     }
 
-    // 2. 쿠키 쿨타임 체크 (1시간)
+    // 2. 쿠키 쿨타임 체크
     if (type === 'cookie' && (now - lastCookieTime < 3600000)) {
         if(sNo) { sNo.currentTime = 0; sNo.play(); }
         const left = Math.ceil((3600000 - (now - lastCookieTime)) / 60000);
         alert(`쿠키는 ${left}분 뒤에!`); return;
     }
 
-    // 3. 기능별 사운드 재생 (whistle 3초 재생 로직 추가)
+    // 3. 기능별 사운드 재생
     if (type === 'ball') {
         if (sWhistle) {
-            sWhistle.currentTime = 0;
-            sWhistle.play();
-            setTimeout(() => { sWhistle.pause(); }, 3000); // 정확히 3초 뒤 멈춤
+            sWhistle.currentTime = 0; sWhistle.play();
+            setTimeout(() => { sWhistle.pause(); }, 3000); // 3초 뒤 정지
         }
     } else if (type === 'pat') {
         if (sPat) { sPat.currentTime = 0; sPat.play(); }
@@ -143,13 +142,12 @@ function trigger(type, fChange, cChange, expGain = 0) {
         if (sEat) { sEat.currentTime = 0; sEat.play(); }
     }
 
-    // 4. 연속 사용 제한 카운트
+    // 4. 연속 사용 제한 카운트 및 경험치 업데이트
     if (type === 'feed') { feedCount++; if(feedCount>=5) { isFullState=true; setTimeout(()=>isFullState=false, 10000); } }
     if (type === 'ball') { playCount++; if(playCount>=5) { isTiredState=true; setTimeout(()=>playCount=0, 10000); } }
     if (type === 'pat') { patCount++; if(patCount>=5) { isPatLimitState=true; setTimeout(()=>patCount=0, 10000); } }
     if (type === 'cookie') lastCookieTime = now;
 
-    // 5. 경험치 및 레벨업 시스템
     if (expGain > 0) {
         exp += expGain;
         const plusTxt = document.getElementById('expPlus');
@@ -162,14 +160,19 @@ function trigger(type, fChange, cChange, expGain = 0) {
         document.getElementById('expNum').innerText = exp;
     }
 
-    // 6. 애니메이션 상태 업데이트
-    state = 5; 
-    effect = type;
+    // 5. [핵심 수정] 애니메이션 시작 및 자동 종료 설정
+    state = 5;      // 기쁜 표정으로 변경
+    effect = type;  // 하트, 공, 손바닥 등 이펙트 표시 시작
     fullness = Math.min(100, fullness + fChange);
     cleanliness = Math.min(100, cleanliness + cChange);
     lastActionTime = now; 
     updateBars();
-    setTimeout(() => { state = 1; effect = null; }, 2000);
+
+    // 2초 뒤에 무조건 기본 상태로 원복
+    setTimeout(() => { 
+        state = 1;  // 기본 표정으로 원복
+        effect = null; // 모든 이펙트(공, 손바닥, 하트 등) 제거
+    }, 2000); 
 }
 
 // --- 이벤트 연결 ---
