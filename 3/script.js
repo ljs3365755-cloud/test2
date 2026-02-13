@@ -23,26 +23,36 @@ function initCanvas() {
 window.addEventListener('resize', initCanvas);
 initCanvas();
 
-// --- [해결 3, 4] 게이지 로직 수정 및 안내 팝업 복구 ---
+// --- 상호작용 실행 함수 (팝업 및 사운드 포함) ---
 function trigger(type, fChange, cChange, expGain = 0) {
     const now = Date.now();
-    const sEat = document.getElementById('soundEat');
     const sNo = document.getElementById('soundReject');
-    const sShw = document.getElementById('soundShower');
-    const sWhistle = document.getElementById('soundWhistle'); 
-    const sPat = document.getElementById('soundPat');
 
-    // [해결 4] 제한 안내 팝업 다시 추가
-    if (type === 'feed' && isFullState) { alert("슬라임이 너무 배불러요! (5회 제한)"); if(sNo) sNo.play(); return; }
-    if (type === 'ball' && isTiredState) { alert("슬라임이 지쳤어요! (5회 제한)"); if(sNo) sNo.play(); return; }
-    if (type === 'pat' && isPatLimitState) { alert("그만 쓰다듬으래요! (5회 제한)"); if(sNo) sNo.play(); return; }
-
+    // [체크] 거부 조건 및 안내 팝업
+    if (type === 'feed' && isFullState) {
+        alert("슬라임이 아직 배불러요! 잠시 후에 주세요.");
+        if(sNo) { sNo.currentTime = 0; sNo.play(); } return;
+    }
+    if (type === 'ball' && isTiredState) {
+        alert("슬라임이 너무 지쳤어요! (5회 제한)");
+        if(sNo) { sNo.currentTime = 0; sNo.play(); } return;
+    }
+    if (type === 'pat' && isPatLimitState) {
+        alert("슬라임이 이제 그만 만지래요! (5회 제한)");
+        if(sNo) { sNo.currentTime = 0; sNo.play(); } return;
+    }
     if (type === 'cookie' && (now - lastCookieTime < 3600000)) {
         const left = Math.ceil((3600000 - (now - lastCookieTime)) / 60000);
-        alert(`쿠키는 ${left}분 뒤에 줄 수 있어요!`); return;
+        alert(`쿠키는 ${left}분 뒤에 줄 수 있어요!`);
+        if(sNo) { sNo.currentTime = 0; sNo.play(); } return;
     }
 
-    // 사운드 재생 로직
+    // [체크] 사운드 재생 (휘슬 3초 제한 포함)
+    const sEat = document.getElementById('soundEat');
+    const sShw = document.getElementById('soundShower');
+    const sWhistle = document.getElementById('soundWhistle');
+    const sPat = document.getElementById('soundPat');
+
     if (type === 'ball') {
         if (sWhistle) { sWhistle.currentTime = 0; sWhistle.play(); setTimeout(() => sWhistle.pause(), 3000); }
     } else if (type === 'pat') {
@@ -53,15 +63,16 @@ function trigger(type, fChange, cChange, expGain = 0) {
         if (sEat) { sEat.currentTime = 0; sEat.play(); }
     }
 
-    // [해결 3] 축구공 선택 시 게이지 감소 방지 (축구공은 마이너스 값을 주지 않도록 설정 가능)
+    // 수치 및 카운트 업데이트
     fullness = Math.max(0, Math.min(100, fullness + fChange));
     cleanliness = Math.max(0, Math.min(100, cleanliness + cChange));
 
-    // 경험치 및 카운트
     if (type === 'feed') { feedCount++; if(feedCount>=5) { isFullState=true; setTimeout(()=>isFullState=false, 10000); } }
     if (type === 'ball') { playCount++; if(playCount>=5) { isTiredState=true; setTimeout(()=>playCount=0, 10000); } }
     if (type === 'pat') { patCount++; if(patCount>=5) { isPatLimitState=true; setTimeout(()=>patCount=0, 10000); } }
-    
+    if (type === 'cookie') lastCookieTime = now;
+
+    // 경험치 및 레벨업
     if (expGain > 0) {
         exp += expGain;
         const plusTxt = document.getElementById('expPlus');
@@ -71,63 +82,94 @@ function trigger(type, fChange, cChange, expGain = 0) {
         document.getElementById('expNum').innerText = exp;
     }
 
-    state = 5; 
-    effect = type; 
-    lastActionTime = now; 
-    updateBars();
-
-    // 2초 뒤 자동 복구
+    // [체크] 상호작용 종료 설정 (2초 후 원복)
+    state = 5; effect = type; lastActionTime = now; updateBars();
     setTimeout(() => { state = 1; effect = null; }, 2000);
 }
 
 function updateBars() {
-    document.getElementById('fullBar').style.height = fullness + "%";
-    document.getElementById('cleanBar').style.height = cleanliness + "%";
+    const fBar = document.getElementById('fullBar');
+    const cBar = document.getElementById('cleanBar');
+    if(fBar) fBar.style.height = fullness + "%";
+    if(cBar) cBar.style.height = cleanliness + "%";
 }
 
-// --- [해결 1, 2] 슬라임 얼굴 및 아이콘 그리기 로직 복구 ---
+// --- 렌더링 로직 (얼굴, 이펙트, 조는 모션) ---
 function drawSlime() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const cx = renderSize / 2, cy = renderSize / 2 + 30;
     const now = Date.now();
+    const idleTime = now - lastActionTime;
     
     let currentDisplayState = (state === 1 && now % 5500 > 5000) ? 2 : state;
 
-    // 몸체
+    // [체크] 30초 무반응 시 조는 모션
+    if (idleTime > 30000 && !isDragging && state === 1) {
+        currentDisplayState = 2;
+        ctx.fillStyle = "#555"; ctx.font = "bold 18px Arial";
+        ctx.fillText("Zzz...", cx + 60, cy - 80 + Math.sin(now/400)*8);
+    }
+
+    // 몸체 그리기
     ctx.fillStyle = SLIME_COLOR;
     ctx.fillRect(cx-30, cy-70, 60, 10); ctx.fillRect(cx-40, cy-60, 80, 10);
     ctx.fillRect(cx-50, cy-50, 100, 40); ctx.fillRect(cx-40, cy-10, 80, 10);
 
-    // [해결 1] 눈 그리기 복구
+    // [체크] 얼굴 그리기 복구 (정상/드래그/감은눈/기쁜표정)
     ctx.fillStyle = "black";
-    if (currentDisplayState === 1 || currentDisplayState === 3) {
+    if (currentDisplayState === 1 || currentDisplayState === 3 || currentDisplayState === 4) {
         ctx.fillRect(cx-20, cy-39, 8, 8); ctx.fillRect(cx+12, cy-39, 8, 8);
-    } else if (currentDisplayState === 2) { // 감은 눈
-        ctx.fillRect(cx-20, cy-35, 12, 3); ctx.fillRect(cx+8, cy-35, 12, 3);
-    } else if (currentDisplayState === 5) { // 기쁜 눈 (^^)
+    } else if (currentDisplayState === 2) { 
+        ctx.fillRect(cx-22, cy-35, 12, 3); ctx.fillRect(cx+10, cy-35, 12, 3);
+    } else if (currentDisplayState === 5) { 
         ctx.font = "bold 20px Arial"; ctx.fillText("^", cx-22, cy-30); ctx.fillText("^", cx+10, cy-30);
     }
 
-    // [해결 2] 상호작용 아이콘(하트, 공, 손바닥) 그리기 복구
+    // [체크] 모든 이펙트 그리기 (물, 쿠키, 비눗방울 포함)
     if (effect) {
         ctx.font = "35px Arial";
         const bounce = Math.sin(now / 200) * 10;
         if (effect === 'feed') ctx.fillText("❤️", cx - 18, cy - 90 + bounce);
         if (effect === 'water') ctx.fillText("💧", cx - 18, cy - 90 + bounce);
         if (effect === 'cookie') ctx.fillText("🍪", cx - 18, cy - 90 + bounce);
-        if (effect === 'ball') ctx.fillText("⚽", cx - 18, cy - 100 - Math.abs(Math.sin(now/250))*50);
+        if (effect === 'ball') ctx.fillText("⚽", cx - 18, cy - 110 - Math.abs(Math.sin(now/250))*50);
         if (effect === 'pat') ctx.fillText("✋", cx - 18 + Math.sin(now/150)*25, cy - 90);
-        if (effect === 'bubbles') ctx.fillText("🫧", cx - 70 + Math.sin(now/200)*15, cy - 50);
+        if (effect === 'bubbles') {
+            ctx.fillText("🫧", cx - 70 + Math.sin(now/200)*15, cy - 50);
+            ctx.fillText("🫧", cx + 40 - Math.sin(now/200)*15, cy - 80);
+        }
     }
 }
 
-// --- 이벤트 연결 ---
+// --- [체크] 터치 및 드래그 이벤트 복구 ---
+function handleStart(e) {
+    if (e.cancelable) e.preventDefault();
+    isDragging = true; state = 4; lastActionTime = Date.now();
+    const snd = document.getElementById('soundSelect');
+    if(snd) { snd.currentTime = 0; snd.play(); }
+}
+function handleMove(e) {
+    if (!isDragging) return;
+    const rect = canvas.getBoundingClientRect();
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const mouseY = (clientY - rect.top) * (renderSize / rect.height);
+    state = (mouseY < 80) ? 3 : 4;
+}
+function handleEnd() { isDragging = false; state = 1; }
+
+canvas.onmousedown = handleStart;
+window.onmousemove = handleMove;
+window.onmouseup = handleEnd;
+canvas.addEventListener('touchstart', handleStart, { passive: false });
+window.addEventListener('touchmove', handleMove, { passive: false });
+window.addEventListener('touchend', handleEnd);
+
+// 버튼 연결
 document.getElementById('feedBtn').onclick = () => trigger('feed', 10, 0);
 document.getElementById('waterBtn').onclick = () => trigger('water', 5, 0);
 document.getElementById('cookieBtn').onclick = () => trigger('cookie', 20, 0);
 document.getElementById('showerBtn').onclick = () => trigger('bubbles', 0, 20);
-// [해결 3] 공놀이 시 게이지 감소를 없애고 싶다면 0, 0으로 수정
-document.getElementById('ballBtn').onclick = () => trigger('ball', 5, 5, 1); 
+document.getElementById('ballBtn').onclick = () => trigger('ball', 5, 5, 1);
 document.getElementById('patBtn').onclick = () => trigger('pat', 0, 0, 1);
 
 function animate() { drawSlime(); requestAnimationFrame(animate); }
