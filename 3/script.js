@@ -2,15 +2,13 @@ const canvas = document.getElementById('slimeCanvas');
 const ctx = canvas.getContext('2d');
 const SLIME_COLOR = "#CDB4DB";
 
-// --- 상태 및 데이터 초기화 ---
 let renderSize = 250; 
 let state = 1, fullness = 50, cleanliness = 50, effect = null;
 let level = 1, exp = 0; 
 let isDragging = false, lastActionTime = Date.now();
 let feedCount = 0, playCount = 0, patCount = 0;
 let isFullState = false, isTiredState = false, isPatLimitState = false;
-let lastCookieTime = 0;
-let lastBallTime = 0; // 축구공 제한 시간 체크용
+let lastCookieTime = 0, lastBallTime = 0;
 
 function initCanvas() {
     const ratio = window.devicePixelRatio || 1;
@@ -24,29 +22,18 @@ function initCanvas() {
 window.addEventListener('resize', initCanvas);
 initCanvas();
 
-// --- 상호작용 로직 (축구공 1분 제한 추가) ---
 function trigger(type, fChange, cChange, expGain = 0) {
     const now = Date.now();
     const sNo = document.getElementById('soundReject');
 
     if (type === 'feed' && isFullState) { alert("슬라임이 배불러요!"); if(sNo) sNo.play(); return; }
-    
-    // [수정] 축구공 1분(60초) 제한 로직
     if (type === 'ball' && isTiredState) {
         const remaining = Math.ceil((60000 - (now - lastBallTime)) / 1000);
-        if (remaining > 0) {
-            alert(`슬라임이 너무 지쳤어요! ${remaining}초 뒤에 다시 놀아주세요.`);
-            if(sNo) sNo.play(); return;
-        } else {
-            isTiredState = false; // 시간 다 되면 해제
-            playCount = 0;
-        }
+        if (remaining > 0) { alert(`슬라임이 지쳤어요! ${remaining}초 뒤에 가능합니다.`); if(sNo) sNo.play(); return; }
+        else { isTiredState = false; playCount = 0; }
     }
-
     if (type === 'pat' && isPatLimitState) { alert("그만 만지래요!"); if(sNo) sNo.play(); return; }
-    if (type === 'cookie' && (now - lastCookieTime < 3600000)) {
-        alert("쿠키는 1시간에 한 번만!"); if(sNo) sNo.play(); return;
-    }
+    if (type === 'cookie' && (now - lastCookieTime < 3600000)) { alert("쿠키는 1시간에 한 번!"); if(sNo) sNo.play(); return; }
 
     const sEat = document.getElementById('soundEat'), sShw = document.getElementById('soundShower');
     const sWhistle = document.getElementById('soundWhistle'), sPat = document.getElementById('soundPat');
@@ -60,18 +47,7 @@ function trigger(type, fChange, cChange, expGain = 0) {
     cleanliness = Math.max(0, Math.min(100, cleanliness + cChange));
     
     if (type === 'feed') { feedCount++; if(feedCount>=5) { isFullState=true; setTimeout(()=>isFullState=false, 10000); } }
-    
-    // [수정] 축구공 5회 클릭 시 1분 제한 시작
-    if (type === 'ball') { 
-        playCount++; 
-        if(playCount >= 5) { 
-            isTiredState = true; 
-            lastBallTime = now; 
-            // 1분(60000ms) 뒤에 자동으로 풀리게 설정
-            setTimeout(() => { isTiredState = false; playCount = 0; }, 60000); 
-        } 
-    }
-    
+    if (type === 'ball') { playCount++; if(playCount >= 5) { isTiredState = true; lastBallTime = now; setTimeout(() => { isTiredState = false; playCount = 0; }, 60000); } }
     if (type === 'pat') { patCount++; if(patCount>=5) { isPatLimitState=true; setTimeout(()=>patCount=0, 10000); } }
     if (type === 'cookie') lastCookieTime = now;
 
@@ -91,51 +67,51 @@ function updateBars() {
     document.getElementById('cleanBar').style.height = cleanliness + "%";
 }
 
-// --- 렌더링 (Zzz... 및 눈 모양 변화 완벽 복구) ---
+// --- 원래 픽셀 외형 복구 및 눈 모양 변형 ---
 function drawSlime() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const cx = renderSize / 2, cy = renderSize / 2 + 30;
     const now = Date.now();
     const idleTime = now - lastActionTime;
     
-    // 30초 무반응 시 감은 눈(상태 2)으로 강제 전환
     let currentDisplayState = (state === 1 && now % 5500 > 5000) ? 2 : state;
     if (idleTime > 30000 && !isDragging && state === 1) currentDisplayState = 2;
 
     ctx.fillStyle = SLIME_COLOR;
-    let sw = 100, sh = 60, eyeY = 0;
-    if (currentDisplayState === 3) { sw = 80; sh = 90; eyeY = -25; } 
-    else if (currentDisplayState === 4) { sw = 120; sh = 40; eyeY = 10; } 
+    let eyeY = 0;
 
-    // 몸체 그리기
-    ctx.fillRect(cx - sw/2 + 10, cy - sh - 10, sw - 20, 10);
-    ctx.fillRect(cx - sw/2, cy - sh, sw, sh - 10);
-    ctx.fillRect(cx - sw/2 + 10, cy - 10, sw - 20, 10);
+    // [복구] 예전 픽셀 스타일 몸체 로직
+    if (currentDisplayState === 3) { // 늘어남
+        eyeY = -25;
+        ctx.fillRect(cx-25, cy-90, 50, 10); ctx.fillRect(cx-35, cy-80, 70, 70); ctx.fillRect(cx-25, cy-10, 50, 10);
+    } else if (currentDisplayState === 4) { // 눌림
+        eyeY = 10;
+        ctx.fillRect(cx-40, cy-50, 80, 10); ctx.fillRect(cx-60, cy-40, 120, 30); ctx.fillRect(cx-40, cy-10, 80, 10);
+    } else { // 기본
+        ctx.fillRect(cx-30, cy-70, 60, 10); ctx.fillRect(cx-40, cy-60, 80, 10);
+        ctx.fillRect(cx-50, cy-50, 100, 40); ctx.fillRect(cx-40, cy-10, 80, 10);
+    }
 
-    // [수정] 눈 그리기: state 3, 4일 때 위치와 모양 확실히 반영
+    // [수정] 눈 모양 변형 (눌림/늘어남 시 가느다란 눈)
     ctx.fillStyle = "black";
-    if (currentDisplayState === 1 || currentDisplayState === 3 || currentDisplayState === 4) {
-        // 드래그 중이거나 일반 상태일 때 (눈 위치 eyeY 적용)
-        ctx.fillRect(cx - 20, cy - 39 + eyeY, 8, 8); 
-        ctx.fillRect(cx + 12, cy - 39 + eyeY, 8, 8);
-    } else if (currentDisplayState === 2) { 
-        // 자거나 눈 깜빡일 때 (감은 눈)
-        ctx.fillRect(cx - 22, cy - 35 + eyeY, 12, 3); 
-        ctx.fillRect(cx + 10, cy - 35 + eyeY, 12, 3);
-        
-        // [수정] 자는 모션 Zzz... 표시 복구
+    if (currentDisplayState === 3 || currentDisplayState === 4) {
+        // 드래그 중에는 가느다란 눈 (- 모양)
+        ctx.fillRect(cx-22, cy-35 + eyeY, 12, 4); ctx.fillRect(cx+10, cy-35 + eyeY, 12, 4);
+    } else if (currentDisplayState === 1) {
+        // 평상시 동그란 눈
+        ctx.fillRect(cx-20, cy-39, 8, 8); ctx.fillRect(cx+12, cy-39, 8, 8);
+    } else if (currentDisplayState === 2) {
+        // 감은 눈 및 Zzz...
+        ctx.fillRect(cx-22, cy-35 + eyeY, 12, 3); ctx.fillRect(cx+10, cy-35 + eyeY, 12, 3);
         if (idleTime > 30000) {
             ctx.fillStyle = "#555"; ctx.font = "bold 18px Arial";
             ctx.fillText("Zzz...", cx + 60, cy - 80 + Math.sin(now/400)*8);
         }
     } else if (currentDisplayState === 5) {
-        // 기쁜 표정
-        ctx.font = "bold 20px Arial"; 
-        ctx.fillText("^", cx - 22, cy - 30 + eyeY); 
-        ctx.fillText("^", cx + 10, cy - 30 + eyeY);
+        ctx.font = "bold 20px Arial"; ctx.fillText("^", cx-22, cy-30 + eyeY); ctx.fillText("^", cx+10, cy-30 + eyeY);
     }
 
-    // 이펙트 아이콘 그리기
+    // 이펙트 그리기 (동일)
     if (effect) {
         ctx.font = "35px Arial";
         const bounce = Math.sin(now / 200) * 10;
@@ -144,11 +120,10 @@ function drawSlime() {
         if (effect === 'cookie') ctx.fillText("🍪", cx - 18, cy - 90 + bounce);
         if (effect === 'ball') ctx.fillText("⚽", cx - 18, cy - 110 - Math.abs(Math.sin(now/250))*50);
         if (effect === 'pat') ctx.fillText("✋", cx - 18 + Math.sin(now/150)*25, cy - 90);
-        if (effect === 'bubbles') ctx.fillText("🫧", cx - 70 + Math.sin(now/200)*15, cy - 50);
+        if (effect === 'bubbles') { ctx.fillText("🫧", cx - 70, cy - 50); ctx.fillText("🫧", cx + 40, cy - 80); }
     }
 }
 
-// --- 이벤트 연결 ---
 function handleStart(e) {
     if(e.cancelable) e.preventDefault();
     isDragging = true; state = 4; lastActionTime = Date.now();
