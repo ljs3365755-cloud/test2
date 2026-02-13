@@ -2,45 +2,56 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>내 슬라임 키우기</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>슬라임 키우기</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <input type="text" placeholder="슬라임 이름 입력..." class="name-input">
-        <div class="lvl-container">
-            Lv.<span id="lvlNum">1</span> (<span id="expNum">0</span>/100)
-            <span id="expPlus" class="exp-plus">+1</span>
+
+    <div id="nameModal">
+        <div class="modal-content">
+            <h2>슬라임 이름을 지어주세요</h2>
+            <input type="text" id="nameInput" placeholder="이름 입력">
+            <br>
+            <button id="nameConfirmBtn">시작하기</button>
         </div>
-        
-        <div class="game-card">
-            <canvas id="slimeCanvas"></canvas>
-            <div class="status-side">
-                <div class="bar-container">
-                    <div class="bar-outer"><div id="fullBar" class="bar-inner fullness"></div></div>
-                    <span>🍱</span>
-                </div>
-                <div class="bar-container">
-                    <div class="bar-outer"><div id="cleanBar" class="bar-inner cleanliness"></div></div>
-                    <span>🚿</span>
-                </div>
+    </div>
+
+    <div id="gameContainer">
+        <div id="topInterface">
+            <span id="slimeNameDisplay">내 슬라임</span>
+            <div class="lv-text">Lv.<span id="lvlNum">1</span></div>
+            <span id="expPlus">+1</span>
+            <button id="resetBtn">슬라임 새로 키우기</button>
+        </div>
+
+        <canvas id="slimeCanvas"></canvas>
+
+        <div class="status-container">
+            <div class="bar-wrap">
+                <span class="bar-label">🍗 배부름</span>
+                <div class="bar-bg"><div id="fullBar" class="bar-fill" style="background: #ff9f43; width: 50%;"></div></div>
+            </div>
+            <div class="bar-wrap">
+                <span class="bar-label">✨ 청결도</span>
+                <div class="bar-bg"><div id="cleanBar" class="bar-fill" style="background: #48dbfb; width: 50%;"></div></div>
+            </div>
+            <div class="bar-wrap">
+                <span class="bar-label">⭐ 경험치</span>
+                <div class="bar-bg"><div id="expBar" class="bar-fill" style="background: #1dd1a1; width: 0%;"></div></div>
             </div>
         </div>
 
-        <div class="button-row">
-            <button id="feedBtn" title="먹기">🍙</button>
-            <button id="waterBtn" title="물주기">💧</button>
-            <button id="cookieBtn" title="쿠키">🍪</button>
-            <button id="showerBtn" title="샤워">🚿</button>
-            <button id="ballBtn" title="공놀이">⚽</button> <button id="patBtn" title="쓰다듬기">✋</button> </div>
+        <div class="controls">
+            <button onclick="trigger('feed', 10, 0)">밥주기</button>
+            <button onclick="trigger('water', 5, 0)">물주기</button>
+            <button onclick="trigger('cookie', 20, 0)">쿠키주기</button>
+            <button onclick="trigger('bubbles', 0, 20)">씻기기</button>
+            <button onclick="trigger('ball', -10, -5, 10)">축구하기</button>
+            <button onclick="trigger('pat', 0, 0, 5)">쓰다듬기</button>
+        </div>
     </div>
 
-    <audio id="soundSelect" src="squeaky.mp3"></audio>
-    <audio id="soundEat" src="ggd-yumyum.mp3"></audio>
-    <audio id="soundReject" src="no.mp3"></audio>
-    <audio id="soundShower" src="bubble-pop.mp3"></audio> 
-<audio id="soundWhistle" src="whistle.mp3"></audio>
-<audio id="soundPat" src="uiiiiiiii.mp3"></audio><script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
