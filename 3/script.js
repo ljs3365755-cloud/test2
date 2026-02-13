@@ -151,14 +151,14 @@ function drawSlime() {
 
     // 이펙트 애니메이션
     if (effect) {
-        ctx.font = "30px Arial";
-        if (effect === 'feed') ctx.fillText("❤️", cx-15, cy-95 + Math.sin(now/200)*10);
-        if (effect === 'bubbles') { 
-            ctx.fillText("🫧", cx-70 + Math.sin(now/200)*10, cy-60); 
-            ctx.fillText("🫧", cx+40 - Math.sin(now/200)*10, cy-80); 
-        }
-        if (effect === 'ball') ctx.fillText("⚽", cx-15, cy-110 - Math.abs(Math.sin(now/250))*40);
-        if (effect === 'pat') ctx.fillText("✋", cx-15 + Math.sin(now/150)*20, cy-90);
+        ctx.font = "35px Arial";
+        const bounce = Math.sin(now / 200) * 10;
+        if (effect === 'feed') ctx.fillText("❤️", cx - 18, cy - 90 + bounce);
+        if (effect === 'water') ctx.fillText("💧", cx - 18, cy - 90 + bounce);
+        if (effect === 'cookie') ctx.fillText("🍪", cx - 18, cy - 90 + bounce);
+        if (effect === 'ball') ctx.fillText("⚽", cx - 18, cy - 110 - Math.abs(Math.sin(now/250))*50);
+        if (effect === 'pat') ctx.fillText("✋", cx - 18 + Math.sin(now/150)*25, cy - 90);
+        if (effect === 'bubbles') { ctx.fillText("🫧", cx - 75 + Math.sin(now/200)*10, cy - 60); ctx.fillText("🫧", cx + 45 - Math.sin(now/200)*10, cy - 90); }
     }
 }
 
