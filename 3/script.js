@@ -110,10 +110,23 @@ function drawSlime() {
         ctx.fillText("Zzz...", cx + 60, cy - 80 + Math.sin(now/400)*8);
     }
 
-    // 몸체 그리기
+   // --- [수정] 상태에 따른 몸체 변형 로직 추가 ---
     ctx.fillStyle = SLIME_COLOR;
-    ctx.fillRect(cx-30, cy-70, 60, 10); ctx.fillRect(cx-40, cy-60, 80, 10);
-    ctx.fillRect(cx-50, cy-50, 100, 40); ctx.fillRect(cx-40, cy-10, 80, 10);
+    let sw = 100, sh = 60; // 기본 너비와 높이
+    let offsetOrder = 0;   // 높이 조절용 변수
+
+    if (currentDisplayState === 3) { 
+        // 위로 늘어남 (상태 3)
+        sw = 80; sh = 90; offsetOrder = -20; 
+    } else if (currentDisplayState === 4) { 
+        // 옆으로 눌림 (상태 4)
+        sw = 120; sh = 40; offsetOrder = 10; 
+    }
+
+    // 변형된 크기에 맞춰 픽셀 스타일로 그리기
+    ctx.fillRect(cx - sw/2 + 10, cy - sh - 10, sw - 20, 10); // 머리 윗부분
+    ctx.fillRect(cx - sw/2,      cy - sh,      sw,      sh - 10); // 몸통 중심
+    ctx.fillRect(cx - sw/2 + 10, cy - 10,      sw - 20, 10); // 바닥 부분
 
     // [체크] 얼굴 그리기 복구 (정상/드래그/감은눈/기쁜표정)
     ctx.fillStyle = "black";
