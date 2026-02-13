@@ -64,13 +64,20 @@ function trigger(type, fChange, cChange, expGain = 0) {
         if(sEat) { sEat.currentTime = 0; sEat.play(); }
     } else if (type === 'bubbles') {
         if(sShw) { sShw.currentTime = 0; sShw.play(); }
-    } else if (type === 'ball') {
-        if(sWhistle) { sWhistle.currentTime = 0; sWhistle.play(); }
-        playCount++; 
-        if (playCount >= 5) { isTiredState = true; lastBallTime = now; }
-    } else if (type === 'pat') {
-        if(sPat) { sPat.currentTime = 0; sPat.play(); }
+   } else if (type === 'ball') {
+    if (sWhistle) {
+        sWhistle.currentTime = 0;
+        sWhistle.play();
+        
+        // [수정] 3초(3000ms) 후에 사운드를 일시정지하고 시간을 처음으로 되돌립니다.
+        setTimeout(() => {
+            sWhistle.pause();
+            sWhistle.currentTime = 0;
+        }, 3000); 
     }
+    playCount++; 
+    if (playCount >= 5) { isTiredState = true; lastBallTime = now; }
+}
 
     // 데이터 업데이트
     fullness = Math.max(0, Math.min(100, fullness + fChange));
@@ -138,7 +145,9 @@ if (effect) {
         if (effect === 'feed') ctx.fillText("❤️", cx - 18, cy - 90 + bounce);
         if (effect === 'water') ctx.fillText("💧", cx - 18, cy - 90 + bounce);
         if (effect === 'cookie') ctx.fillText("🍪", cx - 18, cy - 90 + bounce);
-        if (effect === 'ball') ctx.fillText("⚽", cx - 18, cy - 110 - Math.abs(Math.sin(now/250))*50);
+        if (effect === 'ball') {
+        const ballJump = Math.abs(Math.sin(now/250)) * 40; // 통통 튀는 높이
+        ctx.fillText("⚽", cx-15, cy-80 - ballJump);}
         if (effect === 'pat') ctx.fillText("✋", cx - 18 + Math.sin(now/150)*25, cy - 90);
         if (effect === 'bubbles') { ctx.fillText("🫧", cx - 75 + Math.sin(now/200)*10, cy - 60); ctx.fillText("🫧", cx + 45 - Math.sin(now/200)*10, cy - 90); }
     }
