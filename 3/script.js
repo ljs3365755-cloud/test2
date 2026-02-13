@@ -2,7 +2,7 @@ const canvas = document.getElementById('slimeCanvas');
 const ctx = canvas.getContext('2d');
 const SLIME_COLOR = "#CDB4DB";
 
-// --- 데이터 초기화 ---
+// --- 상태 및 데이터 초기화 ---
 let renderSize = 250; 
 let state = 1, fullness = 50, cleanliness = 50, effect = null;
 let level = 1, exp = 0; 
@@ -28,34 +28,33 @@ function trigger(type, fChange, cChange, expGain = 0) {
     const now = Date.now();
     const sNo = document.getElementById('soundReject');
 
-    // 거부 조건 팝업
+    // 거부 조건 팝업 및 사운드
     if (type === 'feed' && isFullState) { alert("슬라임이 배불러요!"); if(sNo) sNo.play(); return; }
     if (type === 'ball' && isTiredState) { alert("슬라임이 지쳤어요!"); if(sNo) sNo.play(); return; }
     if (type === 'pat' && isPatLimitState) { alert("그만 만지래요!"); if(sNo) sNo.play(); return; }
     if (type === 'cookie' && (now - lastCookieTime < 3600000)) {
-        alert("쿠키는 1시간에 한 번만!"); if(sNo) sNo.play(); return;
+        const left = Math.ceil((3600000 - (now - lastCookieTime)) / 60000);
+        alert(`쿠키는 ${left}분 뒤에!`); if(sNo) sNo.play(); return;
     }
 
-    // 사운드 재생
     const sEat = document.getElementById('soundEat'), sShw = document.getElementById('soundShower');
     const sWhistle = document.getElementById('soundWhistle'), sPat = document.getElementById('soundPat');
 
-    if (type === 'ball' && sWhistle) { sWhistle.play(); setTimeout(() => sWhistle.pause(), 3000); }
+    if (type === 'ball' && sWhistle) { sWhistle.currentTime = 0; sWhistle.play(); setTimeout(() => sWhistle.pause(), 3000); }
     else if (type === 'pat' && sPat) sPat.play();
     else if (type === 'bubbles' && sShw) sShw.play();
     else if (sEat) sEat.play();
 
-    // 게이지 업데이트 (축구공 시 감소 포함)
+    // 게이지 업데이트
     fullness = Math.max(0, Math.min(100, fullness + fChange));
     cleanliness = Math.max(0, Math.min(100, cleanliness + cChange));
     
-    // 카운트 관리
+    // 카운트 및 경험치 처리
     if (type === 'feed') { feedCount++; if(feedCount>=5) { isFullState=true; setTimeout(()=>isFullState=false, 10000); } }
     if (type === 'ball') { playCount++; if(playCount>=5) { isTiredState=true; setTimeout(()=>playCount=0, 10000); } }
     if (type === 'pat') { patCount++; if(patCount>=5) { isPatLimitState=true; setTimeout(()=>patCount=0, 10000); } }
     if (type === 'cookie') lastCookieTime = now;
 
-    // 경험치 처리
     if (expGain > 0) {
         exp += expGain;
         if (exp >= 100) { level++; exp = 0; alert("Level Up!"); }
@@ -82,28 +81,31 @@ function drawSlime() {
     let currentDisplayState = (state === 1 && now % 5500 > 5000) ? 2 : state;
     if (idleTime > 30000 && !isDragging && state === 1) currentDisplayState = 2;
 
-    // 몸체 변형 설정
+    // [수정] 몸체 변형 및 눈 높이(eyeY) 설정
     ctx.fillStyle = SLIME_COLOR;
     let sw = 100, sh = 60, eyeY = 0;
     if (currentDisplayState === 3) { sw = 80; sh = 90; eyeY = -25; } // 늘어남
     else if (currentDisplayState === 4) { sw = 120; sh = 40; eyeY = 10; } // 눌림
 
-    // 몸체 그리기
     ctx.fillRect(cx - sw/2 + 10, cy - sh - 10, sw - 20, 10);
     ctx.fillRect(cx - sw/2, cy - sh, sw, sh - 10);
     ctx.fillRect(cx - sw/2 + 10, cy - 10, sw - 20, 10);
 
-    // 눈 그리기 (몸체 변화에 동기화)
+    // [수정] 눈 그리기 (위치 오프셋 적용)
     ctx.fillStyle = "black";
-    if (currentDisplayState !== 2 && currentDisplayState !== 5) {
-        ctx.fillRect(cx-20, cy-39 + eyeY, 8, 8); ctx.fillRect(cx+12, cy-39 + eyeY, 8, 8);
-    } else if (currentDisplayState === 2) {
-        ctx.fillRect(cx-22, cy-35 + eyeY, 12, 3); ctx.fillRect(cx+10, cy-35 + eyeY, 12, 3);
+    if (currentDisplayState === 1 || currentDisplayState === 3 || currentDisplayState === 4) {
+        ctx.fillRect(cx-20, cy-39 + eyeY, 8, 8); 
+        ctx.fillRect(cx+12, cy-39 + eyeY, 8, 8);
+    } else if (currentDisplayState === 2) { 
+        ctx.fillRect(cx-22, cy-35 + eyeY, 12, 3); 
+        ctx.fillRect(cx+10, cy-35 + eyeY, 12, 3);
     } else if (currentDisplayState === 5) {
-        ctx.font = "bold 20px Arial"; ctx.fillText("^", cx-22, cy-30 + eyeY); ctx.fillText("^", cx+10, cy-30 + eyeY);
+        ctx.font = "bold 20px Arial"; 
+        ctx.fillText("^", cx-22, cy-30 + eyeY); 
+        ctx.fillText("^", cx+10, cy-30 + eyeY);
     }
 
-    // 이펙트 아이콘
+    // 이펙트 그리기
     if (effect) {
         ctx.font = "35px Arial";
         const bounce = Math.sin(now / 200) * 10;
@@ -112,32 +114,48 @@ function drawSlime() {
         if (effect === 'cookie') ctx.fillText("🍪", cx - 18, cy - 90 + bounce);
         if (effect === 'ball') ctx.fillText("⚽", cx - 18, cy - 110 - Math.abs(Math.sin(now/250))*50);
         if (effect === 'pat') ctx.fillText("✋", cx - 18 + Math.sin(now/150)*25, cy - 90);
-        if (effect === 'bubbles') ctx.fillText("🫧", cx - 70 + Math.sin(now/200)*15, cy - 50);
+        if (effect === 'bubbles') {
+            ctx.fillText("🫧", cx - 70 + Math.sin(now/200)*15, cy - 50);
+            ctx.fillText("🫧", cx + 40 - Math.sin(now/200)*15, cy - 80);
+        }
+        if (idleTime > 30000 && !isDragging && state === 1) {
+            ctx.fillStyle = "#555"; ctx.font = "bold 18px Arial";
+            ctx.fillText("Zzz...", cx + 60, cy - 80 + Math.sin(now/400)*8);
+        }
     }
 }
 
-// --- 이벤트 연결 ---
-function handleStart(e) { if(e.cancelable) e.preventDefault(); isDragging = true; state = 4; }
+// --- [수정] 터치/드래그 이벤트 및 소리 복구 ---
+function handleStart(e) {
+    if(e.cancelable) e.preventDefault();
+    isDragging = true;
+    state = 4;
+    lastActionTime = Date.now();
+    const snd = document.getElementById('soundSelect');
+    if(snd) { snd.currentTime = 0; snd.play(); } // 소리 재생
+}
 function handleMove(e) {
     if (!isDragging) return;
     const rect = canvas.getBoundingClientRect();
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const clientY = (e.touches ? e.touches[0].clientY : e.clientY);
     const mouseY = (clientY - rect.top) * (renderSize / rect.height);
-    state = (mouseY < 80) ? 3 : 4;
+    state = (mouseY < 80) ? 3 : 4; // 높이에 따라 늘어남/눌림 상태 전환
 }
 function handleEnd() { isDragging = false; state = 1; }
 
-canvas.onmousedown = handleStart; window.onmousemove = handleMove; window.onmouseup = handleEnd;
+canvas.onmousedown = handleStart;
+window.onmousemove = handleMove;
+window.onmouseup = handleEnd;
 canvas.addEventListener('touchstart', handleStart, {passive:false});
 window.addEventListener('touchmove', handleMove, {passive:false});
 window.addEventListener('touchend', handleEnd);
 
-// 버튼 액션 설정
+// 버튼 연결
 document.getElementById('feedBtn').onclick = () => trigger('feed', 10, 0);
 document.getElementById('waterBtn').onclick = () => trigger('water', 5, 0);
 document.getElementById('cookieBtn').onclick = () => trigger('cookie', 20, 0);
 document.getElementById('showerBtn').onclick = () => trigger('bubbles', 0, 20);
-document.getElementById('ballBtn').onclick = () => trigger('ball', -10, -5, 1); // 게이지 감소 적용
+document.getElementById('ballBtn').onclick = () => trigger('ball', -10, -5, 1); // 게이지 감소
 document.getElementById('patBtn').onclick = () => trigger('pat', 0, 0, 1);
 
 function animate() { drawSlime(); requestAnimationFrame(animate); }
