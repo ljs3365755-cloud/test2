@@ -95,7 +95,7 @@ function updateBars() {
 }
 
 // --- 렌더링 로직 (얼굴, 이펙트, 조는 모션) ---
-function drawSlime() {
+ffunction drawSlime() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const cx = renderSize / 2, cy = renderSize / 2 + 30;
     const now = Date.now();
@@ -103,42 +103,49 @@ function drawSlime() {
     
     let currentDisplayState = (state === 1 && now % 5500 > 5000) ? 2 : state;
 
-    // [체크] 30초 무반응 시 조는 모션
+    // 조는 모션 (Zzz...)
     if (idleTime > 30000 && !isDragging && state === 1) {
         currentDisplayState = 2;
         ctx.fillStyle = "#555"; ctx.font = "bold 18px Arial";
         ctx.fillText("Zzz...", cx + 60, cy - 80 + Math.sin(now/400)*8);
     }
 
-   // --- [수정] 상태에 따른 몸체 변형 로직 추가 ---
+    // --- [핵심 수정] 몸체 변형 및 눈 위치 오프셋 설정 ---
     ctx.fillStyle = SLIME_COLOR;
-    let sw = 100, sh = 60; // 기본 너비와 높이
-    let offsetOrder = 0;   // 높이 조절용 변수
+    let sw = 100, sh = 60; // 기본 크기
+    let eyeYOffset = 0;    // 눈의 높낮이 조절용
 
     if (currentDisplayState === 3) { 
-        // 위로 늘어남 (상태 3)
-        sw = 80; sh = 90; offsetOrder = -20; 
+        // 위로 늘어남: 몸은 좁고 길게, 눈은 위로
+        sw = 80; sh = 90; eyeYOffset = -25; 
     } else if (currentDisplayState === 4) { 
-        // 옆으로 눌림 (상태 4)
-        sw = 120; sh = 40; offsetOrder = 10; 
+        // 옆으로 눌림: 몸은 넓고 낮게, 눈은 아래로
+        sw = 120; sh = 40; eyeYOffset = 10; 
     }
 
-    // 변형된 크기에 맞춰 픽셀 스타일로 그리기
-    ctx.fillRect(cx - sw/2 + 10, cy - sh - 10, sw - 20, 10); // 머리 윗부분
-    ctx.fillRect(cx - sw/2,      cy - sh,      sw,      sh - 10); // 몸통 중심
-    ctx.fillRect(cx - sw/2 + 10, cy - 10,      sw - 20, 10); // 바닥 부분
+    // 변형된 몸체 그리기
+    ctx.fillRect(cx - sw/2 + 10, cy - sh - 10, sw - 20, 10); // 머리
+    ctx.fillRect(cx - sw/2,      cy - sh,      sw,      sh - 10); // 몸통
+    ctx.fillRect(cx - sw/2 + 10, cy - 10,      sw - 20, 10); // 바닥
 
-    // [체크] 얼굴 그리기 복구 (정상/드래그/감은눈/기쁜표정)
+    // --- [핵심 수정] 변형에 맞춰 눈 그리기 ---
     ctx.fillStyle = "black";
+    // 기본 눈 위치(cy-39)에 eyeYOffset을 더해 몸을 따라가게 함
     if (currentDisplayState === 1 || currentDisplayState === 3 || currentDisplayState === 4) {
-        ctx.fillRect(cx-20, cy-39, 8, 8); ctx.fillRect(cx+12, cy-39, 8, 8);
+        ctx.fillRect(cx-20, cy-39 + eyeYOffset, 8, 8); 
+        ctx.fillRect(cx+12, cy-39 + eyeYOffset, 8, 8);
     } else if (currentDisplayState === 2) { 
-        ctx.fillRect(cx-22, cy-35, 12, 3); ctx.fillRect(cx+10, cy-35, 12, 3);
+        // 감은 눈 (눈 오프셋 적용)
+        ctx.fillRect(cx-22, cy-35 + eyeYOffset, 12, 3); 
+        ctx.fillRect(cx+10, cy-35 + eyeYOffset, 12, 3);
     } else if (currentDisplayState === 5) { 
-        ctx.font = "bold 20px Arial"; ctx.fillText("^", cx-22, cy-30); ctx.fillText("^", cx+10, cy-30);
+        // 기쁜 표정 (눈 오프셋 적용)
+        ctx.font = "bold 20px Arial"; 
+        ctx.fillText("^", cx-22, cy-30 + eyeYOffset); 
+        ctx.fillText("^", cx+10, cy-30 + eyeYOffset);
     }
 
-    // [체크] 모든 이펙트 그리기 (물, 쿠키, 비눗방울 포함)
+    // 이펙트 그리기 (기존과 동일)
     if (effect) {
         ctx.font = "35px Arial";
         const bounce = Math.sin(now / 200) * 10;
@@ -182,7 +189,7 @@ document.getElementById('feedBtn').onclick = () => trigger('feed', 10, 0);
 document.getElementById('waterBtn').onclick = () => trigger('water', 5, 0);
 document.getElementById('cookieBtn').onclick = () => trigger('cookie', 20, 0);
 document.getElementById('showerBtn').onclick = () => trigger('bubbles', 0, 20);
-document.getElementById('ballBtn').onclick = () => trigger('ball', 5, 5, 1);
+document.getElementById('ballBtn').onclick = () => trigger('ball', -10, -5, 1);
 document.getElementById('patBtn').onclick = () => trigger('pat', 0, 0, 1);
 
 function animate() { drawSlime(); requestAnimationFrame(animate); }
