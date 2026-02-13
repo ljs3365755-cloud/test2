@@ -109,51 +109,67 @@ function drawEffect(type, cx, cy, now) {
 // --- [수정 2] 물, 쿠키 반응 및 경험치 로직 원복 ---
 function trigger(type, fChange, cChange, expGain = 0) {
     const now = Date.now();
-    const sEat = document.getElementById('soundEat'), sNo = document.getElementById('soundReject'), sShw = document.getElementById('soundShower');
+    const sEat = document.getElementById('soundEat');
+    const sNo = document.getElementById('soundReject');
+    const sShw = document.getElementById('soundShower');
+    const sWhistle = document.getElementById('soundWhistle'); 
+    const sPat = document.getElementById('soundPat');
 
-    // 거부 조건 체크
+    // 1. 거부 조건 체크 (이미지 속 내용 포함됨)
     if ((type === 'feed' && isFullState) || (type === 'ball' && isTiredState) || (type === 'pat' && isPatLimitState)) {
         if(sNo) { sNo.currentTime = 0; sNo.play(); }
         return;
     }
-    // 쿠키 쿨타임 체크 (1시간)
+
+    // 2. 쿠키 쿨타임 체크 (1시간)
     if (type === 'cookie' && (now - lastCookieTime < 3600000)) {
         if(sNo) { sNo.currentTime = 0; sNo.play(); }
         const left = Math.ceil((3600000 - (now - lastCookieTime)) / 60000);
         alert(`쿠키는 ${left}분 뒤에!`); return;
     }
 
-    // 사운드 재생
-    if (type === 'bubbles') { if(sShw) { sShw.currentTime=0; sShw.play(); } } 
-    else { if(sEat) { sEat.currentTime=0; sEat.play(); } }
+    // 3. 기능별 사운드 재생 (whistle 3초 재생 로직 추가)
+    if (type === 'ball') {
+        if (sWhistle) {
+            sWhistle.currentTime = 0;
+            sWhistle.play();
+            setTimeout(() => { sWhistle.pause(); }, 3000); // 정확히 3초 뒤 멈춤
+        }
+    } else if (type === 'pat') {
+        if (sPat) { sPat.currentTime = 0; sPat.play(); }
+    } else if (type === 'bubbles') {
+        if (sShw) { sShw.currentTime = 0; sShw.play(); }
+    } else {
+        if (sEat) { sEat.currentTime = 0; sEat.play(); }
+    }
 
-    // 연속 사용 제한 카운트
+    // 4. 연속 사용 제한 카운트
     if (type === 'feed') { feedCount++; if(feedCount>=5) { isFullState=true; setTimeout(()=>isFullState=false, 10000); } }
     if (type === 'ball') { playCount++; if(playCount>=5) { isTiredState=true; setTimeout(()=>playCount=0, 10000); } }
     if (type === 'pat') { patCount++; if(patCount>=5) { isPatLimitState=true; setTimeout(()=>patCount=0, 10000); } }
     if (type === 'cookie') lastCookieTime = now;
 
-    // 레벨업 시스템
+    // 5. 경험치 및 레벨업 시스템
     if (expGain > 0) {
         exp += expGain;
         const plusTxt = document.getElementById('expPlus');
-        plusTxt.classList.add('show'); setTimeout(()=>plusTxt.classList.remove('show'), 800);
+        if(plusTxt) {
+            plusTxt.classList.add('show'); 
+            setTimeout(()=>plusTxt.classList.remove('show'), 800);
+        }
         if (exp >= 100) { level++; exp = 0; alert("Level Up!"); }
         document.getElementById('lvlNum').innerText = level;
         document.getElementById('expNum').innerText = exp;
     }
 
-    state = 5; effect = type;
+    // 6. 애니메이션 상태 업데이트
+    state = 5; 
+    effect = type;
     fullness = Math.min(100, fullness + fChange);
     cleanliness = Math.min(100, cleanliness + cChange);
     lastActionTime = now; 
     updateBars();
     setTimeout(() => { state = 1; effect = null; }, 2000);
-}
-
-function updateBars() {
-    document.getElementById('fullBar').style.height = fullness + "%";
-    document.getElementById('cleanBar').style.height = cleanliness + "%";
 }
 
 // --- 이벤트 연결 ---
