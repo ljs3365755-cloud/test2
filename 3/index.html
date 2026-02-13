@@ -9,10 +9,13 @@
 <body>
     <div class="container">
         <input type="text" placeholder="슬라임 이름 입력..." class="name-input">
+        <div class="lvl-container">
+            Lv.<span id="lvlNum">1</span> (<span id="expNum">0</span>/100)
+            <span id="expPlus" class="exp-plus">+1</span>
+        </div>
         
         <div class="game-card">
             <canvas id="slimeCanvas"></canvas>
-            
             <div class="status-side">
                 <div class="bar-container">
                     <div class="bar-outer"><div id="fullBar" class="bar-inner fullness"></div></div>
@@ -25,20 +28,17 @@
             </div>
         </div>
 
-        <p class="hint">슬라임을 클릭하거나 버튼을 눌러보세요!</p>
-
         <div class="button-row">
-            <button id="feedBtn">🍙</button>
-            <button id="waterBtn">💧</button>
-            <button id="cookieBtn">🍪</button>
-            <button id="showerBtn">🚿</button>
-        </div>
+            <button id="feedBtn" title="먹기">🍙</button>
+            <button id="waterBtn" title="물주기">💧</button>
+            <button id="cookieBtn" title="쿠키">🍪</button>
+            <button id="showerBtn" title="샤워">🚿</button>
+            <button id="ballBtn" title="공놀이">⚽</button> <button id="patBtn" title="쓰다듬기">✋</button> </div>
     </div>
 
     <audio id="soundSelect" src="squeaky.mp3"></audio>
     <audio id="soundEat" src="ggd-yumyum.mp3"></audio>
     <audio id="soundReject" src="no.mp3"></audio>
-
-    <script src="script.js"></script>
+    <audio id="soundShower" src="bubble-pop.mp3"></audio> <script src="script.js"></script>
 </body>
 </html>

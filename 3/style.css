@@ -1,108 +1,162 @@
-body {
-    background-color: #f0f0f0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    font-family: Arial, sans-serif;
+/* 기본 배경 및 레이아웃 설정 */
+body { 
+    background-color: #f0f0f0; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    height: 100vh; 
+    margin: 0; 
+    font-family: 'Arial', sans-serif; 
+    overflow: hidden; 
 }
 
 .container { text-align: center; }
 
-.name-input {
-    border: none;
-    border-bottom: 2px solid #CDB4DB;
-    background: none;
-    text-align: center;
-    font-size: 18px;
-    margin-bottom: 20px;
-    outline: none;
+/* 이름 입력창 */
+.name-input { 
+    border: none; 
+    border-bottom: 2px solid #CDB4DB; 
+    background: none; 
+    text-align: center; 
+    font-size: 18px; 
+    outline: none; 
+    margin-bottom: 5px;
 }
 
-.game-card {
-    background: white;
-    padding: 30px;
-    border-radius: 30px;
-    display: flex;
-    gap: 30px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-    align-items: center;
+/* 7~11. 레벨 및 경험치 시스템 디자인 */
+.lvl-container { 
+    margin: 10px 0 20px 0; 
+    font-weight: bold; 
+    color: #555; 
+    position: relative; 
+    display: inline-block;
 }
 
-#slimeCanvas {
-    background: #fff;
-    border: 2px solid #333;
-    image-rendering: pixelated;
+/* 경험치 획득 시 나타나는 +1 효과 */
+.exp-plus { 
+    position: absolute; 
+    right: -35px; 
+    top: 0;
+    color: #ff4757; 
+    opacity: 0; 
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.5s ease-out; 
 }
 
-.status-side {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+.exp-plus.show { 
+    opacity: 1; 
+    transform: translateY(-20px); 
 }
+
+/* 메인 게임 카드 */
+.game-card { 
+    background: white; 
+    padding: 30px; 
+    border-radius: 30px; 
+    display: flex; 
+    gap: 30px; 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05); 
+    align-items: center; 
+}
+
+/* 캔버스 (슬라임 화면) */
+#slimeCanvas { 
+    background: #fff; 
+    border: 2px solid #333; 
+    image-rendering: pixelated; /* 픽셀 아트 선명도 유지 */
+    border-radius: 10px;
+}
+
+/* 14. 상태 게이지 바 디자인 */
+.status-side { display: flex; flex-direction: column; gap: 15px; }
 
 .bar-container { display: flex; flex-direction: column; align-items: center; gap: 5px; }
 
-.bar-outer {
-    width: 30px;
-    height: 150px;
-    background: #eee;
-    border-radius: 15px;
-    position: relative;
-    overflow: hidden;
-    border: 2px solid #333;
+.bar-outer { 
+    width: 30px; 
+    height: 150px; 
+    background: #eee; 
+    border-radius: 15px; 
+    position: relative; 
+    overflow: hidden; 
+    border: 2px solid #333; 
 }
 
-.bar-inner {
-    width: 100%;
-    position: absolute;
-    bottom: 0;
-    transition: height 0.3s;
+.bar-inner { 
+    width: 100%; 
+    position: absolute; 
+    bottom: 0; 
+    transition: height 0.3s ease; 
 }
 
-.fullness { background: #FFB703; }
-.cleanliness { background: #219EBC; }
+.fullness { background: #FFB703; }    /* 배부름 색상 */
+.cleanliness { background: #219EBC; } /* 청결도 색상 */
 
-.button-row {
-    margin-top: 30px;
+/* 2, 4. 하단 버튼 디자인 */
+.button-row { 
+    margin-top: 25px; 
+    display: flex; 
+    justify-content: center; 
+    gap: 12px; 
+    flex-wrap: wrap; 
+}
+
+button { 
+    width: 60px; 
+    height: 60px; 
+    border-radius: 50%; 
+    border: 2px solid #333; 
+    background: white; 
+    font-size: 28px; 
+    cursor: pointer; 
+    box-shadow: 0 4px 0 #333; 
+    transition: 0.1s; 
     display: flex;
+    align-items: center;
     justify-content: center;
-    gap: 15px;
 }
 
-button {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    border: 2px solid #333;
-    background: white;
-    font-size: 30px;
-    cursor: pointer;
-    box-shadow: 0 4px 0 #333;
+button:active { 
+    transform: translateY(2px); 
+    box-shadow: 0 2px 0 #333; 
 }
 
-button:active { transform: translateY(2px); box-shadow: 0 2px 0 #333; }
+/* 힌트 텍스트 */
+.hint {
+    font-size: 14px;
+    color: #888;
+    margin-top: 15px;
+}
 
-/* 모바일 대응 */
+/* 모바일 반응형 대응 (화면 작을 때 세로 배치) */
 @media screen and (max-width: 768px) {
-    .game-card {
-        flex-direction: column;
-        width: 85vw;
-        padding: 20px;
+    .game-card { 
+        flex-direction: column; 
+        width: 85vw; 
+        padding: 20px; 
+        gap: 15px;
     }
-    #slimeCanvas {
-        width: 70vw;
-        height: 70vw;
+
+    #slimeCanvas { 
+        width: 75vw; 
+        height: 75vw; 
     }
-    .status-side {
-        flex-direction: row;
-        width: 100%;
-        justify-content: space-evenly;
+
+    .status-side { 
+        flex-direction: row; 
+        width: 100%; 
+        justify-content: space-evenly; 
     }
-    button {
-        width: 70px;
-        height: 70px;
-        font-size: 35px;
+
+    .bar-outer {
+        width: 45px;
+        height: 120px;
+    }
+
+    button { 
+        width: 65px; 
+        height: 65px; 
+        font-size: 32px; 
     }
 }
