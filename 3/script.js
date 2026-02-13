@@ -29,7 +29,7 @@ function trigger(type, fChange, cChange, expGain = 0) {
     if (type === 'feed' && isFullState) { alert("슬라임이 배불러요!"); if(sNo) sNo.play(); return; }
     if (type === 'ball' && isTiredState) {
         const remaining = Math.ceil((60000 - (now - lastBallTime)) / 1000);
-        if (remaining > 0) { alert(`슬라임이 지쳤어요! ${remaining}초 뒤에 가능합니다.`); if(sNo) sNo.play(); return; }
+        if (remaining > 0) { alert(`슬라임이 지쳤어요! ${remaining}초 뒤에 가능.`); if(sNo) sNo.play(); return; }
         else { isTiredState = false; playCount = 0; }
     }
     if (type === 'pat' && isPatLimitState) { alert("그만 만지래요!"); if(sNo) sNo.play(); return; }
@@ -46,17 +46,25 @@ function trigger(type, fChange, cChange, expGain = 0) {
     fullness = Math.max(0, Math.min(100, fullness + fChange));
     cleanliness = Math.max(0, Math.min(100, cleanliness + cChange));
     
-    if (type === 'feed') { feedCount++; if(feedCount>=5) { isFullState=true; setTimeout(()=>isFullState=false, 10000); } }
-    if (type === 'ball') { playCount++; if(playCount >= 5) { isTiredState = true; lastBallTime = now; setTimeout(() => { isTiredState = false; playCount = 0; }, 60000); } }
-    if (type === 'pat') { patCount++; if(patCount>=5) { isPatLimitState=true; setTimeout(()=>patCount=0, 10000); } }
-    if (type === 'cookie') lastCookieTime = now;
-
+    // [수정] 경험치 획득 시 +1 텍스트 효과 복구
     if (expGain > 0) {
         exp += expGain;
+        const plusTxt = document.getElementById('expPlus');
+        if(plusTxt) {
+            plusTxt.classList.remove('show');
+            void plusTxt.offsetWidth; // 리플로우 강제 발생으로 애니메이션 재시작
+            plusTxt.classList.add('show');
+            setTimeout(() => plusTxt.classList.remove('show'), 800);
+        }
         if (exp >= 100) { level++; exp = 0; alert("Level Up!"); }
         document.getElementById('lvlNum').innerText = level;
         document.getElementById('expNum').innerText = exp;
     }
+
+    if (type === 'feed') { feedCount++; if(feedCount>=5) { isFullState=true; setTimeout(()=>isFullState=false, 10000); } }
+    if (type === 'ball') { playCount++; if(playCount >= 5) { isTiredState = true; lastBallTime = now; setTimeout(() => { isTiredState = false; playCount = 0; }, 60000); } }
+    if (type === 'pat') { patCount++; if(patCount>=5) { isPatLimitState=true; setTimeout(()=>patCount=0, 10000); } }
+    if (type === 'cookie') lastCookieTime = now;
 
     state = 5; effect = type; lastActionTime = now; updateBars();
     setTimeout(() => { state = 1; effect = null; }, 2000);
@@ -67,7 +75,6 @@ function updateBars() {
     document.getElementById('cleanBar').style.height = cleanliness + "%";
 }
 
-// --- 원래 픽셀 외형 복구 및 눈 모양 변형 ---
 function drawSlime() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const cx = renderSize / 2, cy = renderSize / 2 + 30;
@@ -80,7 +87,7 @@ function drawSlime() {
     ctx.fillStyle = SLIME_COLOR;
     let eyeY = 0;
 
-    // [복구] 예전 픽셀 스타일 몸체 로직
+    // 몸체 그리기
     if (currentDisplayState === 3) { // 늘어남
         eyeY = -25;
         ctx.fillRect(cx-25, cy-90, 50, 10); ctx.fillRect(cx-35, cy-80, 70, 70); ctx.fillRect(cx-25, cy-10, 50, 10);
@@ -92,16 +99,17 @@ function drawSlime() {
         ctx.fillRect(cx-50, cy-50, 100, 40); ctx.fillRect(cx-40, cy-10, 80, 10);
     }
 
-    // [수정] 눈 모양 변형 (눌림/늘어남 시 가느다란 눈)
+    // [수정] 눈 모양 변형 (늘어날 때 ㅣㅣ 로 변경)
     ctx.fillStyle = "black";
-    if (currentDisplayState === 3 || currentDisplayState === 4) {
-        // 드래그 중에는 가느다란 눈 (- 모양)
+    if (currentDisplayState === 3) {
+        // 위로 늘어날 때: 세로로 긴 눈 (ㅣ ㅣ)
+        ctx.fillRect(cx-18, cy-45 + eyeY, 4, 12); ctx.fillRect(cx+14, cy-45 + eyeY, 4, 12);
+    } else if (currentDisplayState === 4) {
+        // 눌릴 때: 가로로 긴 눈 (- -)
         ctx.fillRect(cx-22, cy-35 + eyeY, 12, 4); ctx.fillRect(cx+10, cy-35 + eyeY, 12, 4);
     } else if (currentDisplayState === 1) {
-        // 평상시 동그란 눈
         ctx.fillRect(cx-20, cy-39, 8, 8); ctx.fillRect(cx+12, cy-39, 8, 8);
     } else if (currentDisplayState === 2) {
-        // 감은 눈 및 Zzz...
         ctx.fillRect(cx-22, cy-35 + eyeY, 12, 3); ctx.fillRect(cx+10, cy-35 + eyeY, 12, 3);
         if (idleTime > 30000) {
             ctx.fillStyle = "#555"; ctx.font = "bold 18px Arial";
@@ -111,7 +119,7 @@ function drawSlime() {
         ctx.font = "bold 20px Arial"; ctx.fillText("^", cx-22, cy-30 + eyeY); ctx.fillText("^", cx+10, cy-30 + eyeY);
     }
 
-    // 이펙트 그리기 (동일)
+    // [수정] 이펙트 그리기 (비눗방울 모션 복구)
     if (effect) {
         ctx.font = "35px Arial";
         const bounce = Math.sin(now / 200) * 10;
@@ -120,7 +128,11 @@ function drawSlime() {
         if (effect === 'cookie') ctx.fillText("🍪", cx - 18, cy - 90 + bounce);
         if (effect === 'ball') ctx.fillText("⚽", cx - 18, cy - 110 - Math.abs(Math.sin(now/250))*50);
         if (effect === 'pat') ctx.fillText("✋", cx - 18 + Math.sin(now/150)*25, cy - 90);
-        if (effect === 'bubbles') { ctx.fillText("🫧", cx - 70, cy - 50); ctx.fillText("🫧", cx + 40, cy - 80); }
+        if (effect === 'bubbles') { 
+            // 비눗방울이 좌우에서 나타나는 모션 복구
+            ctx.fillText("🫧", cx - 75 + Math.sin(now/200)*10, cy - 60); 
+            ctx.fillText("🫧", cx + 45 - Math.sin(now/200)*10, cy - 90); 
+        }
     }
 }
 
