@@ -6,20 +6,36 @@ let slimeName = "", level = 1, exp = 0, fullness = 50, cleanliness = 50;
 let state = 1, effect = null, isDragging = false, renderSize = 250;
 let lastActionTime = Date.now();
 let lastBallTime = 0, playCount = 0, isTiredState = false;
-let lastCookieTime = 0; // [추가] 마지막 쿠키 준 시간 저장
+let lastCookieTime = 0; 
 
 let slimeColor = "#CDB4DB"; 
 const palette = ["#CDB4DB", "#FFCCF9", "#A2D2FF", "#BEE1E6", "#E2ECE9", "#DFE7FD", "#FFD700", "#FF6B6B", "#C1F0C1"];
 
-// 초기화 버튼 이벤트 (이 코드가 script.js 안에 확실히 있는지 확인해 주세요)
-document.getElementById('resetBtn').onclick = () => {
-    if (confirm("정말 새로 키우시겠습니까? 모든 기록이 삭제되고 이름 설정부터 다시 시작합니다.")) {
-        // 모든 저장 데이터 삭제
-        localStorage.removeItem('slimeData');
-        // 페이지 새로고침 (이름 입력 모달이 다시 뜨게 함)
-        location.reload();
+// --- [수정] 이 위치로 옮기거나 아래 loadData 안으로 넣으세요 ---
+function initEvents() {
+    const resetBtn = document.getElementById('resetBtn');
+    if (resetBtn) {
+        resetBtn.onclick = () => {
+            if (confirm("정말 새로 키우시겠습니까? 모든 기록이 삭제되고 이름 설정부터 다시 시작합니다.")) {
+                localStorage.removeItem('slimeData');
+                location.reload();
+            }
+        };
     }
-};
+
+    const nameConfirmBtn = document.getElementById('nameConfirmBtn');
+    if (nameConfirmBtn) {
+        nameConfirmBtn.onclick = () => {
+            const input = document.getElementById('nameInput').value.trim();
+            if (input) {
+                slimeName = input;
+                document.getElementById('slimeNameDisplay').innerText = slimeName + " 슬라임";
+                document.getElementById('nameModal').style.display = 'none';
+                saveData();
+            }
+        };
+    }
+}
 
 // --- 데이터 저장 및 불러오기 ---
 function saveData() {
@@ -221,7 +237,8 @@ window.addEventListener('touchend', handleEnd);
 
 window.addEventListener('resize', initCanvas);
 initCanvas(); 
-loadData();
+loadData();   // 저장된 데이터 불러오기
+initEvents(); // [추가] 버튼 이벤트들 연결
 
 function animate() { drawSlime(); requestAnimationFrame(animate); }
 animate();
