@@ -11,6 +11,16 @@ let lastCookieTime = 0; // [추가] 마지막 쿠키 준 시간 저장
 let slimeColor = "#CDB4DB"; 
 const palette = ["#CDB4DB", "#FFCCF9", "#A2D2FF", "#BEE1E6", "#E2ECE9", "#DFE7FD", "#FFD700", "#FF6B6B", "#C1F0C1"];
 
+// 초기화 버튼 이벤트 (이 코드가 script.js 안에 확실히 있는지 확인해 주세요)
+document.getElementById('resetBtn').onclick = () => {
+    if (confirm("정말 새로 키우시겠습니까? 모든 기록이 삭제되고 이름 설정부터 다시 시작합니다.")) {
+        // 모든 저장 데이터 삭제
+        localStorage.removeItem('slimeData');
+        // 페이지 새로고침 (이름 입력 모달이 다시 뜨게 함)
+        location.reload();
+    }
+};
+
 // --- 데이터 저장 및 불러오기 ---
 function saveData() {
     const data = { 
