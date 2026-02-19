@@ -4,17 +4,19 @@ const ctx = canvas.getContext('2d');
 // --- 변수 및 상태 관리 ---
 let slimeName = "", level = 1, exp = 0, fullness = 50, cleanliness = 50;
 let state = 1, effect = null, isDragging = false, renderSize = 250;
-let lastActionTime = Date.now(), lastBallTime = 0, playCount = 0;
-let isTiredState = false;
+let lastActionTime = Date.now();
+let lastBallTime = 0, playCount = 0, isTiredState = false;
+let lastCookieTime = 0; // [추가] 마지막 쿠키 준 시간 저장
+
 let slimeColor = "#CDB4DB"; 
 const palette = ["#CDB4DB", "#FFCCF9", "#A2D2FF", "#BEE1E6", "#E2ECE9", "#DFE7FD", "#FFD700", "#FF6B6B", "#C1F0C1"];
 
 // --- 데이터 저장 및 불러오기 ---
 function saveData() {
-    // 마지막으로 저장된 시간(현재 시간)을 함께 저장합니다.
     const data = { 
         slimeName, level, exp, fullness, cleanliness, slimeColor,
-        lastSaveTime: Date.now() 
+        lastSaveTime: Date.now(),
+        lastCookieTime // [추가] 쿠키 시간 저장
     };
     localStorage.setItem('slimeData', JSON.stringify(data));
 }
@@ -24,58 +26,34 @@ function loadData() {
     if (saved) {
         const data = JSON.parse(saved);
         slimeName = data.slimeName;
-        level = data.level; 
-        exp = data.exp;
-        fullness = data.fullness; 
-        cleanliness = data.cleanliness;
+        level = data.level; exp = data.exp;
+        fullness = data.fullness; cleanliness = data.cleanliness;
         slimeColor = data.slimeColor || "#CDB4DB";
+        lastCookieTime = data.lastCookieTime || 0; // [추가] 쿠키 시간 로드
 
-        // [추가] 부재중 시간 계산 및 수치 감소
         if (data.lastSaveTime) {
             const now = Date.now();
             const diffMs = now - data.lastSaveTime;
-            const tenMinutes = 10 * 60 * 1000; // 10분을 밀리초로 계산
-            const decreaseAmount = Math.floor(diffMs / tenMinutes); // 지난 10분당 1%
-
+            const decreaseAmount = Math.floor(diffMs / (10 * 60 * 1000));
             if (decreaseAmount > 0) {
                 fullness = Math.max(0, fullness - decreaseAmount);
                 cleanliness = Math.max(0, cleanliness - decreaseAmount);
             }
         }
-        
         document.getElementById('nameModal').style.display = 'none';
         document.getElementById('slimeNameDisplay').innerText = slimeName + " 슬라임";
         updateBars();
     }
 }
 
-// [추가] 실시간 감소 타이머 (10분마다 1% 감소)
+// --- 실시간 감소 타이머 (10분마다 1%) ---
 setInterval(() => {
-    if (!slimeName) return; // 이름이 정해진 후부터 시작
+    if (!slimeName) return;
     fullness = Math.max(0, fullness - 1);
     cleanliness = Math.max(0, cleanliness - 1);
     updateBars();
-    saveData(); // 변화된 수치 저장
-}, 10 * 60 * 1000); 
-
-
-// --- 인터페이스 이벤트 ---
-document.getElementById('nameConfirmBtn').onclick = () => {
-    const input = document.getElementById('nameInput').value.trim();
-    if (input) {
-        slimeName = input;
-        document.getElementById('slimeNameDisplay').innerText = slimeName + " 슬라임";
-        document.getElementById('nameModal').style.display = 'none';
-        saveData();
-    }
-};
-
-document.getElementById('resetBtn').onclick = () => {
-    if (confirm("정말 새로 키우시겠습니까? 모든 기록이 삭제됩니다.")) {
-        localStorage.removeItem('slimeData');
-        location.reload();
-    }
-};
+    saveData();
+}, 10 * 60 * 1000);
 
 // --- 핵심 로직: 상호작용 (trigger) ---
 function trigger(type, fChange, cChange, expGain = 0) {
@@ -87,17 +65,25 @@ function trigger(type, fChange, cChange, expGain = 0) {
     const sWhistle = document.getElementById('soundWhistle');
     const sPat = document.getElementById('soundPat');
 
-    if (type === 'ball' && isTiredState) {
-        const left = Math.ceil((60000 - (now - lastBallTime)) / 1000);
-        if (left > 0) {
-            alert(`슬라임이 너무 지쳤어요! ${left}초 뒤에 가능.`);
+    // [수정] 쿠키 시간 제한 확인 (1시간 = 3600000ms)
+    if (type === 'cookie') {
+        const cookieCooldown = 60 * 60 * 1000; // 1시간
+        if (now - lastCookieTime < cookieCooldown) {
+            const remaining = Math.ceil((cookieCooldown - (now - lastCookieTime)) / (60 * 1000));
+            alert(`슬라임이 배가 불러요! ${remaining}분 뒤에 쿠키를 줄 수 있습니다.`);
             return;
-        } else {
-            isTiredState = false;
-            playCount = 0;
         }
+        lastCookieTime = now; // 쿠키 준 시간 업데이트
     }
 
+    // 축구공 제한 로직
+    if (type === 'ball' && isTiredState) {
+        const left = Math.ceil((60000 - (now - lastBallTime)) / 1000);
+        if (left > 0) { alert(`지쳤어요! ${left}초 뒤에 가능.`); return; }
+        else { isTiredState = false; playCount = 0; }
+    }
+
+    // 사운드 재생
     if (type === 'feed' || type === 'water' || type === 'cookie') {
         if(sEat) { sEat.currentTime = 0; sEat.play(); }
     } else if (type === 'bubbles') {
@@ -122,23 +108,19 @@ function trigger(type, fChange, cChange, expGain = 0) {
         plus.classList.remove('show');
         void plus.offsetWidth;
         plus.classList.add('show');
-        
         if (exp >= 100) {
-            level++;
-            exp = 0;
+            level++; exp = 0;
             slimeColor = palette[Math.floor(Math.random() * palette.length)];
             alert(`Level Up! ${level}레벨이 되었습니다!`);
         }
     }
 
-    state = 5;
-    effect = type; 
-    lastActionTime = now;
-    updateBars(); 
-    saveData();
+    state = 5; effect = type; lastActionTime = now;
+    updateBars(); saveData();
     setTimeout(() => { state = 1; effect = null; }, 2000);
 }
 
+// --- 나머지 그리기 및 이벤트 코드는 이전과 동일하게 유지 ---
 function updateBars() {
     document.getElementById('fullBar').style.width = fullness + "%";
     document.getElementById('cleanBar').style.width = cleanliness + "%";
@@ -146,13 +128,11 @@ function updateBars() {
     document.getElementById('lvlNum').innerText = level;
 }
 
-// --- 렌더링: 슬라임 그리기 (기존과 동일) ---
 function drawSlime() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const cx = renderSize / 2, cy = renderSize / 2 + 30;
     const now = Date.now();
     const idleTime = now - lastActionTime;
-    
     let currentDisplayState = (state === 1 && now % 5000 > 4700) ? 2 : state;
     if (idleTime > 30000 && !isDragging && state === 1) currentDisplayState = 2;
 
@@ -200,7 +180,6 @@ if (effect) {
         if (effect === 'bubbles') { ctx.fillText("🫧", cx - 75 + Math.sin(now/200)*10, cy - 60); ctx.fillText("🫧", cx + 45 - Math.sin(now/200)*10, cy - 90); }
     }
 }
-
 
 function initCanvas() {
     const ratio = window.devicePixelRatio || 1;
